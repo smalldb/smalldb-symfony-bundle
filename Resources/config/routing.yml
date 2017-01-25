@@ -25,21 +25,34 @@
 #         resource: "@SmalldbBundle/Resources/config/routing.yml"
 #
 
-smalldb_action:
+smalldb-action.json:
         path: '/{machine_ref}!{action}'
+        condition: "request.headers.get('Accept') matches '/^application\\\\/json([,;].*)?$/'"
+        #condition: 'smalldb.isMachineIdValid(machine_id)'
         requirements:
-                machine_ref: "[^!]+(/[^!]+)*"
+                machine_ref: "[^!/]+(/[^!/]+)*"
                 action: "[^!/]+"
-        #condition: 'smalldb.isMachineIdValid(machine_id)'
         defaults:
-                _controller: "SmalldbBundle:RestApi:dumpRequest"
+                _controller: "SmalldbBundle:RestApi:invokeTransition"
 
-smalldb_machine:
+smalldb-read.json:
         path: '/{machine_ref}'
-        requirements:
-                machine_ref: "[^!]+(/[^!]+)*"
+        methods: ['GET']
+        condition: "request.headers.get('Accept') matches '/^application\\\\/json([,;].*)?$/'"
         #condition: 'smalldb.isMachineIdValid(machine_id)'
+        requirements:
+                machine_ref: "[^!/]+(/[^!/]+)*"
         defaults:
-                _controller: "SmalldbBundle:RestApi:dumpRequest"
+                _controller: "SmalldbBundle:RestApi:readState"
+
+smalldb-listing.json:
+        path: '/'
+        methods: ['GET']
+        condition: "request.query.count() >= 1 && request.headers.get('Accept') matches '/^application\\\\/json([,;].*)?$/'"
+        #condition: "request.headers.get('Accept') matches '/^application\\\\/json([,;].*)?$/'"
+        #condition: 'smalldb.isMachineIdValid(machine_id)'
+        requirements:
+        defaults:
+                _controller: "SmalldbBundle:RestApi:listing"
 
 

@@ -32,6 +32,109 @@ use Smalldb\StateMachine\Reference;
 class RestApiController extends Controller
 {
 
+	protected function jsonResponse($data, $http_code = 200)
+	{
+		$response = new JsonResponse($data, 200);
+		$response->setEncodingOptions(JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		return $response;
+	}
+
+
+	protected function jsonException(\Exception $ex)
+	{
+		$class = get_class($ex);
+		switch ($class) {
+			case 'Smalldb\\StateMachine\\TransitionAccessException':
+				$http_code = '403';
+				break;
+			case 'Smalldb\\StateMachine\\InstanceDoesNotExistException':
+				$http_code = '404';
+				break;
+			default:
+				$http_code = '500';
+				break;
+		}
+
+                $data = array(
+                        'exception' => get_class($ex),
+                        'message' => $ex->getMessage(),
+                        'code' => $ex->getCode(),
+                );
+
+		return $this->jsonResponse($data, $http_code);
+	}
+
+
+	public function readStateAction(Request $request, Reference $machine_ref)
+	{
+		try {
+			$view_list = $request->query->keys();
+			if (empty($view_list)) {
+				// Read state and properties
+				return $this->jsonResponse([
+					'id' => $machine_ref->id,
+					'properties' => $machine_ref->properties,
+					'state' => $machine_ref->state,
+				]);
+			} else {
+				// Read views
+				$response = [
+					'id' => $machine_ref->id,
+				];
+				foreach ($view_list as $view) {
+					$response[$view] = $machine_ref->$view;
+				}
+				return $this->jsonResponse($response);
+			}
+		}
+		catch(\Exception $ex) {
+			return $this->jsonException($ex);
+		}
+	}
+
+
+	public function listingAction(Request $request)
+	{
+		try {
+			$filters = $request->query->all();
+			$listing = $this->container->get('smalldb')->createListing($filters);
+			return $this->jsonResponse([
+				'items' => array_values($listing->fetchAll()),  // Order of object's properties not guaranteed in JS
+				'processed_filters' => $listing->getProcessedFilters(),
+			]);
+
+		}
+		catch(\Exception $ex) {
+			return $this->jsonException($ex);
+		}
+	}
+
+
+	public function invokeTransitionAction(Request $request, Reference $machine_ref, $action)
+	{
+		$args = $request->request->get('args');
+
+		try {
+			if ($request->getMethod() == 'POST') {
+				return $this->jsonResponse([
+					'id' => $machine_ref->id,
+					'action' => $action,
+					'result' => call_user_func_array(array($machine_ref, $action), empty($args) ? [] : $args),
+				]);
+			} else {
+				return $this->jsonResponse([
+					'id' => $machine_ref->id,
+					'action' => $action,
+					'allowed' => $machine_ref->machine->isTransitionAllowed($machine_ref, $action),
+				]);
+			}
+		}
+		catch(\Exception $ex) {
+			return $this->jsonException($ex);
+		}
+	}
+
+
 	public function dumpRequestAction(Request $request, Reference $machine_ref, $action = null)
 	{
 		//$smalldb = $this->container->get('smalldb');
