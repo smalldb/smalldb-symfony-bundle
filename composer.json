@@ -13,7 +13,7 @@
     "require": {
         "php": ">=5.5",
         "smalldb/libsmalldb": "dev-master",
-        "smalldb/flupdo": "^1.3",
+        "smalldb/flupdo": "*",
         "symfony/config": "^3.2",
         "symfony/dependency-injection": "^3.2",
         "symfony/expression-language": "^3.2",
