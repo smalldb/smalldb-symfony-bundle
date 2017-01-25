@@ -21,6 +21,8 @@ namespace Smalldb\SmalldbBundle\DependencyInjection;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+
 
 class SmalldbExtension extends Extension
 {
@@ -49,6 +51,11 @@ class SmalldbExtension extends Extension
 		$auth = $container->register('auth', $auth_class);
 		$auth->setArguments([$config['auth']]);
 		$auth->addMethodCall('checkSession');
+
+		// Reference resolver
+		$definition = new Definition('Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver', array(new Reference('smalldb')));
+		$definition->addTag('controller.argument_value_resolver', array('priority' => 200));
+		$container->setDefinition('app.value_resolver.smalldb_reference', $definition);
 	}
 }
 
