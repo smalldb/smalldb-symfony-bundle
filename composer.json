@@ -1,0 +1,23 @@
+{
+    "name": "smalldb/smalldb-symfony-bundle",
+    "description": "Symfony bundle for Smalldb",
+    "license": "Apache-2.0",
+    "type": "symfony-bundle",
+    "homepage": "https://smalldb.org/",
+    "authors": [
+        {
+            "name": "Josef Kufner",
+            "email": "josef@kufner.cz"
+        }
+    ],
+    "require": {
+        "php": ">=5.5",
+        "smalldb/libsmalldb": "dev-master",
+        "symfony/framework-bundle": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Smalldb\\SmalldbBundle\\": ""
+        }
+    }
+}
