@@ -49,7 +49,7 @@ class SmalldbExtension extends Extension
                 }
                 $auth_class = $config['auth']['class'];
 		$auth = $container->register('auth', $auth_class);
-		$auth->setArguments([$config['auth']]);
+		$auth->setArguments([$config['auth'], $smalldb]);
 		$auth->addMethodCall('checkSession');
 
 		// Reference resolver

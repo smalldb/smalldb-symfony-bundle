@@ -48,7 +48,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 		return Reference::class == $argument->getType() && $request->attributes->has($argument->getName());
 
 		// $path = $request->attributes->get($argument->getName());
-		// return $this->smalldb->inferMachineType(split('/', $path), $m_type, $m_id);
+		// return $this->smalldb->inferMachineType(explode('/', $path), $m_type, $m_id);
 	}
 
 
@@ -59,7 +59,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	{
 		$path = $request->attributes->get($argument->getName());
 		if (!is_array($path)) {
-			$path = split('/', $path);
+			$path = explode('/', $path);
 		}
 		yield $this->smalldb->ref($path);
 	}
