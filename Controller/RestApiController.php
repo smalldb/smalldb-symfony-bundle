@@ -34,7 +34,7 @@ class RestApiController extends Controller
 
 	protected function jsonResponse($data, $http_code = 200)
 	{
-		$response = new JsonResponse($data, 200);
+		$response = new JsonResponse($data, $http_code);
 		$response->setEncodingOptions(JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		return $response;
 	}
