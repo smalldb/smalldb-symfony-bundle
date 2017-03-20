@@ -12,13 +12,13 @@ Features
 Smalldb Symfony Bundle integrates [libSmalldb](/libsmalldb) into Symfony
 framework, including the 
 [Security subsystem](http://symfony.com/doc/current/security.html).
-It also provides convenient configuration and optional REST-API.
+It also provides convenient configuration and optional REST API.
 
 
 Installation
 ------------
 
-Add the bundle into your `composer.json`:
+First, add the bundle into your `composer.json`:
 
 ```json
 {
@@ -47,6 +47,7 @@ class AppKernel extends \Symfony\Component\HttpKernel\Kernel
 Finally, configure the bundle — `app/config/config.yml`:
 
 ```yml
+# See: bin/console config:dump-reference SmalldbBundle
 smalldb:
     smalldb:
         base_dir: '%kernel.root_dir%/../src/AppBundle/StateMachines'
@@ -73,7 +74,7 @@ security:
             smalldb: ~
 ```
 
-REST API can be unabled using predefined routes — `app/config/routing.yml`:
+REST API can be enabled using predefined routes — `app/config/routing.yml`:
 
 ```yml
 smalldb:
