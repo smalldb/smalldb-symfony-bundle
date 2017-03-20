@@ -1,0 +1,10 @@
+stages:
+        - deploy
+
+mirror:
+        stage: deploy
+        only:
+                - tags
+                - master
+        script:
+                - 'for url in $MIRROR_GIT_URLS ; do echo ; echo "$url" ; git push -f "$url" --tags origin/master:master; done'
