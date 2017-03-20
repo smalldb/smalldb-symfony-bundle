@@ -16,26 +16,26 @@
  *
  */
 
-namespace Smalldb\SmalldbBundle;
+namespace Smalldb\SmalldbBundle\Security;
 
-use Smalldb\SmalldbBundle\Security\SmalldbSecurityFactory;
+use Smalldb\SmalldbBundle\Security\SmalldbToken;
 
-use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
-/**
- * Symfony bundle for Smalldb
- */
-class SmalldbBundle extends Bundle
+
+class SmalldbAuthenticationProvider implements AuthenticationProviderInterface
 {
 	
-	public function build(ContainerBuilder $container)
+	public function authenticate(TokenInterface $token)
 	{
-		parent::build($container);
+		return ($token instanceof SmalldbToken) ? $token : null;
+	}
 
-		// Register authentication listener
-		$security_extension = $container->getExtension('security');
-		$security_extension->addSecurityListenerFactory(new SmalldbSecurityFactory());
+
+	public function supports(TokenInterface $token)
+	{
+		return ($token instanceof SmalldbToken);
 	}
 
 }

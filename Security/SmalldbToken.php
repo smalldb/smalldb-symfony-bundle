@@ -16,26 +16,28 @@
  *
  */
 
-namespace Smalldb\SmalldbBundle;
+namespace Smalldb\SmalldbBundle\Security;
 
-use Smalldb\SmalldbBundle\Security\SmalldbSecurityFactory;
+use Smalldb\StateMachine\Reference;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 
-use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-
-/**
- * Symfony bundle for Smalldb
- */
-class SmalldbBundle extends Bundle
+class SmalldbToken extends AbstractToken
 {
-	
-	public function build(ContainerBuilder $container)
-	{
-		parent::build($container);
 
-		// Register authentication listener
-		$security_extension = $container->getExtension('security');
-		$security_extension->addSecurityListenerFactory(new SmalldbSecurityFactory());
+	public function __construct(Reference $session_machine)
+	{
+		$roles = explode(',', $session_machine->user['roles']);
+
+		parent::__construct($roles);
+
+		$this->setAuthenticated($session_machine->state != '');
+	}
+
+
+	public function getCredentials()
+	{
+		return true;
 	}
 
 }

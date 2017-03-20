@@ -18,6 +18,9 @@
 
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
+use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
+use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
+
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -50,7 +53,21 @@ class SmalldbExtension extends Extension
                 $auth_class = $config['auth']['class'];
 		$auth = $container->register('auth', $auth_class);
 		$auth->setArguments([$config['auth'], $smalldb]);
-		$auth->addMethodCall('checkSession');
+		$auth->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
+
+		// Authentication listener
+		$auth_listener = new Definition(SmalldbAuthenticationListener::class, array(
+			new Reference('security.token_storage'),
+			new Reference('security.authentication.manager'),
+			new Reference('smalldb'),
+		));
+		$auth_listener->setPublic(false);
+		$container->setDefinition('smalldb.security.authentication.listener', $auth_listener);
+
+		// Authentication provider
+		$auth_provider = new Definition(SmalldbAuthenticationProvider::class, array());
+		$auth_provider->setPublic(false);
+		$container->setDefinition('smalldb.security.authentication.provider', $auth_provider);
 
 		// Reference resolver
 		$definition = new Definition('Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver', array(new Reference('smalldb')));
