@@ -1,0 +1,6 @@
+INPUT = ./
+	./README.md \
+	./Resources/doc
+
+EXAMPLE_PATH = ./Resources/doc/
+

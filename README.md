@@ -101,7 +101,7 @@ See https://smalldb.org/doc/smalldb-symfony-bundle/master/
 License
 -------
 
-The most of the code is published under Apache 2.0 license. See [LICENSE](doc/license.md) file for details.
+The most of the code is published under Apache 2.0 license. See [LICENSE](Resources/doc/license.md) file for details.
 
 
 Contribution guidelines

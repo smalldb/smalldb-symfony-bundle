@@ -8,3 +8,17 @@ mirror:
                 - master
         script:
                 - 'for url in $MIRROR_GIT_URLS ; do echo ; echo "$url" ; git push -f "$url" --tags origin/master:master; done'
+
+doc:
+        stage: deploy
+        only:
+                - tags
+                - master
+        script:
+                - 'composer install --dev'
+                - 'echo "Destination: $DOC_INSTALL_DESTINATION/"'
+                - 'test -n "$DOC_INSTALL_DESTINATION"'
+                - '[ -d "$DOC_INSTALL_DESTINATION/$CI_BUILD_REF_NAME/" ] || mkdir -pv "$DOC_INSTALL_DESTINATION/$CI_BUILD_REF_NAME/"'
+                - 'make doc'
+                - 'rsync -r --stats "./Resources/doc/doxygen/html/" "$DOC_INSTALL_DESTINATION/$CI_BUILD_REF_NAME/"'
+
