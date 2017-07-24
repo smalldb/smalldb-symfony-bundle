@@ -24,9 +24,12 @@ use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 
 class SmalldbToken extends AbstractToken
 {
+	protected $session_machine;
+
 
 	public function __construct(Reference $session_machine)
 	{
+		$this->session_machine = $session_machine;
 		$roles = explode(',', $session_machine->user['roles']);
 
 		parent::__construct($roles);
@@ -38,6 +41,14 @@ class SmalldbToken extends AbstractToken
 	public function getCredentials()
 	{
 		return true;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getUsername()
+	{
+		return $this->session_machine->user_login;
 	}
 
 }
