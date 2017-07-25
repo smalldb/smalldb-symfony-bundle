@@ -18,13 +18,17 @@
 
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
+use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
+use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
+use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\SmalldbBundle\JsonDirBackend;
+use Smalldb\Flupdo\Flupdo;
 
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 
 
 class SmalldbExtension extends Extension
@@ -37,42 +41,55 @@ class SmalldbExtension extends Extension
 		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
 
                 // Create Smalldb backend
-		$smalldb = $container->register('smalldb', \Smalldb\SmalldbBundle\JsonDirBackend::class);
-		$smalldb->setArguments([$config['smalldb'], null, 'smalldb']);
-		$smalldb->addMethodCall('setContext', [new Reference('service_container')]);
+		$container->register('smalldb', JsonDirBackend::class)
+			->setArguments([$config['smalldb'], null, 'smalldb'])
+			->addMethodCall('setDebugLogger', [new Reference('smalldb.debug_logger')])
+			->addMethodCall('setContext', [new Reference('service_container')])
+			->setShared(true);
 
                 // Initialize database connection & query builder
-		$flupdo = $container->register('flupdo', \Smalldb\Flupdo\Flupdo::class);
-		$flupdo->setFactory([\Smalldb\Flupdo\Flupdo::class, 'createInstanceFromConfig']);
-		$flupdo->setArguments([$config['flupdo']]);
+		$container->register('flupdo', Flupdo::class)
+			->setFactory([Flupdo::class, 'createInstanceFromConfig'])
+			->setArguments([$config['flupdo']]);
 
                 // Initialize authenticator
-                if (!isset($config['auth']['class'])) {
+                if (empty($config['auth']['class'])) {
                         throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
                 }
-                $auth_class = $config['auth']['class'];
-		$auth = $container->register('auth', $auth_class);
-		$auth->setArguments([$config['auth'], $smalldb]);
-		$auth->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
+		$container->register('auth', $config['auth']['class'])
+			->setArguments([$config['auth'], new Reference('smalldb')])
+			->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
 
 		// Authentication listener
-		$auth_listener = new Definition(SmalldbAuthenticationListener::class, array(
-			new Reference('security.token_storage'),
-			new Reference('security.authentication.manager'),
-			new Reference('smalldb'),
-		));
-		$auth_listener->setPublic(false);
-		$container->setDefinition('smalldb.security.authentication.listener', $auth_listener);
+		$container->register('smalldb.security.authentication.listener', SmalldbAuthenticationListener::class)
+			->setArguments([
+				new Reference('security.token_storage'),
+				new Reference('security.authentication.manager'),
+				new Reference('smalldb')
+			])
+			->setPublic(false);
 
 		// Authentication provider
-		$auth_provider = new Definition(SmalldbAuthenticationProvider::class, array());
-		$auth_provider->setPublic(false);
-		$container->setDefinition('smalldb.security.authentication.provider', $auth_provider);
+		$container->register('smalldb.security.authentication.provider', SmalldbAuthenticationProvider::class)
+			->setPublic(false);
 
 		// Reference resolver
-		$definition = new Definition('Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver', array(new Reference('smalldb')));
-		$definition->addTag('controller.argument_value_resolver', array('priority' => 200));
-		$container->setDefinition('app.value_resolver.smalldb_reference', $definition);
+		$container->register('app.value_resolver.smalldb_reference', ReferenceValueResolver::class)
+			->setArguments([new Reference('smalldb')])
+			->addTag('controller.argument_value_resolver', ['priority' => 200]);
+
+                // Data logger
+		$container->register('smalldb.debug_logger', DebugLogger::class)
+			->setPublic(false);
+
+		// Web Profiler page
+		$container->register('smalldb.data_collector', SmalldbDataCollector::class)
+			->setArguments([new Reference('smalldb'), new Reference('smalldb.debug_logger')])
+			->setPublic(false)
+			->addTag('data_collector', [
+				'template' => '@SmalldbBundle/data_collector/template.html.twig',
+				'id'       => 'smalldb',
+			]);
 	}
 }
 
