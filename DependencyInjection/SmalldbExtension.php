@@ -38,6 +38,12 @@ class SmalldbExtension extends Extension
 		// Get configuration
 		$configuration = new Configuration();
 		$config = $this->processConfiguration($configuration, $configs);
+
+		// Don't load anything when configuration is completely missing
+		if (empty($config['smalldb'])) {
+			return;
+		}
+
 		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
 
                 // Create Smalldb backend
