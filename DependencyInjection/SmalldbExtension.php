@@ -93,7 +93,7 @@ class SmalldbExtension extends Extension
 			->setArguments([new Reference('smalldb'), new Reference('smalldb.debug_logger')])
 			->setPublic(false)
 			->addTag('data_collector', [
-				'template' => '@SmalldbBundle/data_collector/template.html.twig',
+				'template' => '@Smalldb/data_collector/template.html.twig',
 				'id'       => 'smalldb',
 			]);
 	}
