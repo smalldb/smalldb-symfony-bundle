@@ -34,7 +34,7 @@ class Configuration implements ConfigurationInterface
 					->children()
 						->scalarNode('base_dir')
 							->info('Path to state machine definitions in JSON files (see JsonDirBackend).')
-							->defaultValue('%kernel.root_dir%/../src/AppBundle/StateMachines')
+							->defaultValue('%kernel.root_dir%/../statemachines')
 							->cannotBeEmpty()
 							->isRequired()
 						->end()
