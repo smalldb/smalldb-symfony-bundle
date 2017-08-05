@@ -14,9 +14,14 @@
 			<b>Backend class:</b>
 			<span>{{collector.backend_class | abbr_class}}</span>
 		</div>
-		
+
 		<div class="sf-toolbar-info-piece">
-			<b>State machines:</b>
+			<b>Machines defined:</b>
+			<span class="sf-toolbar-status">{{collector.logger.machines_defined_count}}</span>
+		</div>
+
+		<div class="sf-toolbar-info-piece">
+			<b>Machines created:</b>
 			<span class="sf-toolbar-status">{{collector.logger.machines_created_count}}</span>
 		</div>
 
@@ -58,8 +63,13 @@
 		</div>
 		
 		<div class="metric">
+			<span class="value">{{collector.logger.machines_defined_count}}</span>
+			<span class="label">State machines defined</span>
+		</div>
+
+		<div class="metric">
 			<span class="value">{{collector.logger.machines_created_count}}</span>
-			<span class="label">State machines</span>
+			<span class="label">State machines created</span>
 		</div>
 
 		<div class="metric">

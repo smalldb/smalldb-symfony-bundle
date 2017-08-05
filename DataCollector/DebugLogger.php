@@ -24,9 +24,16 @@ class DebugLogger implements IDebugLogger
 {
 	public $log = [];
 
+	public $machines_defined_count = 0;
 	public $machines_created_count = 0;
 	public $references_created_count = 0;
 	public $transitions_invoked_count = 0;
+
+
+	function afterDebugLoggerRegistered($smalldb)
+	{
+		$this->machines_defined_count = count($smalldb->getKnownTypes());
+	}
 
 
 	function afterMachineCreated($smalldb, $type, $machine)

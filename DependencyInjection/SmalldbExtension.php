@@ -23,6 +23,7 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\SmalldbBundle\AbstractBackend;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
 
@@ -52,11 +53,15 @@ class SmalldbExtension extends Extension
 			->addMethodCall('setDebugLogger', [new Reference('smalldb.debug_logger')])
 			->addMethodCall('setContext', [new Reference('service_container')])
 			->setShared(true);
+		$container->setAlias(AbstractBackend::class, 'smalldb');
 
                 // Initialize database connection & query builder
 		$container->register('flupdo', Flupdo::class)
 			->setFactory([Flupdo::class, 'createInstanceFromConfig'])
-			->setArguments([$config['flupdo']]);
+			->setArguments([$config['flupdo']])
+			->setShared(true);
+		$container->setAlias(Flupdo::class, 'flupdo');
+		$container->setAlias(\PDO::class, 'flupdo');
 
                 // Initialize authenticator
                 if (empty($config['auth']['class'])) {
