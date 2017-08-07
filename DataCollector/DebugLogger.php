@@ -45,6 +45,7 @@ class DebugLogger implements IDebugLogger
 	{
 		$this->machines_created_count++;
 		$this->log[] = [
+			'backend' => get_class($smalldb),
 			'event' => 'afterMachineCreated',
 			'machine_type' => $type,
 			'class' => get_class($machine),
@@ -55,6 +56,7 @@ class DebugLogger implements IDebugLogger
 	{
 		$this->references_created_count++;
 		$this->log[] = [
+			'backend' => get_class($smalldb),
 			'event' => 'afterReferenceCreated',
 			'machine_type' => $ref->machine_type,
 			'id' => $ref->id,
@@ -67,6 +69,7 @@ class DebugLogger implements IDebugLogger
 	{
 		$this->listings_created_count++;
 		$this->log[] = [
+			'backend' => get_class($smalldb),
 			'event' => 'afterListingCreated',
 			'machine_type' => $filters['type'] ?? null,
 			'class' => get_class($listing),
@@ -80,6 +83,7 @@ class DebugLogger implements IDebugLogger
 	{
 		$this->transitions_invoked_count++;
 		$this->log[] = [
+			'backend' => get_class($smalldb),
 			'event' => 'beforeTransition',
 			'machine_type' => $ref->machine_type,
 			'id' => $ref->id,
@@ -93,6 +97,7 @@ class DebugLogger implements IDebugLogger
 	function afterTransition(AbstractBackend $smalldb, Reference $ref, string $old_state, string $transition_name, string $new_state, $return_value, $returns)
 	{
 		$this->log[] = [
+			'backend' => get_class($smalldb),
 			'event' => 'afterTransition',
 			'machine_type' => $ref->machine_type,
 			'id' => $ref->id,

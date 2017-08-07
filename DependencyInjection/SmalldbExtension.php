@@ -23,6 +23,7 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\AbstractBackend;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
@@ -46,6 +47,12 @@ class SmalldbExtension extends Extension
 		}
 
 		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
+
+		// Create Smalldb entry point
+		$container->autowire(Smalldb::class)
+			->addMethodCall('registerBackend', [new Reference(AbstractBackend::class)])
+			->setShared(true)
+			->setPublic(true);
 
                 // Create Smalldb backend
 		$container->autowire(JsonDirBackend::class)
@@ -97,7 +104,7 @@ class SmalldbExtension extends Extension
 
 		// Web Profiler page
 		$container->register('smalldb.data_collector', SmalldbDataCollector::class)
-			->setArguments([new Reference(AbstractBackend::class), new Reference('smalldb.debug_logger')])
+			->setArguments([new Reference(Smalldb::class), new Reference('smalldb.debug_logger')])
 			->setPublic(false)
 			->addTag('data_collector', [
 				'template' => '@Smalldb/data_collector/template.html.twig',

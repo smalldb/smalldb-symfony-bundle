@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use Smalldb\StateMachine\AbstractBackend;
+use Smalldb\StateMachine\Smalldb;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 
 
@@ -32,7 +32,7 @@ class SmalldbDataCollector extends DataCollector
 
 	protected $references_created_count = 0;
 
-	public function __construct(AbstractBackend $smalldb, DebugLogger $debug_logger)
+	public function __construct(Smalldb $smalldb, DebugLogger $debug_logger)
 	{
 		$this->smalldb = $smalldb;
 		$this->debug_logger = $debug_logger;
@@ -41,8 +41,16 @@ class SmalldbDataCollector extends DataCollector
 
 	public function collect(Request $request, Response $response, \Exception $exception = null)
 	{
+		$backends = [];
+		foreach ($this->smalldb->getBackends() as $backend) {
+			$backends[] = [
+				'class' => get_class($backend),
+				'known_types' => $backend->getKnownTypes(),
+			];
+		}
+
 		$this->data = [
-			'backend_class' => get_class($this->smalldb),
+			'backends' => $backends,
 			'logger' => $this->debug_logger,
 		];
 	}
