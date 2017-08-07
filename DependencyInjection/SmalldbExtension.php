@@ -100,6 +100,7 @@ class SmalldbExtension extends Extension
 			->addTag('data_collector', [
 				'template' => '@Smalldb/data_collector/template.html.twig',
 				'id'       => 'smalldb',
+				'priority' => 270,
 			]);
 	}
 }
