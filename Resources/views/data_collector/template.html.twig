@@ -31,6 +31,11 @@
 		</div>
 
 		<div class="sf-toolbar-info-piece">
+			<b>Listings created:</b>
+			<span class="sf-toolbar-status">{{collector.logger.listings_created_count}}</span>
+		</div>
+
+		<div class="sf-toolbar-info-piece">
 			<b>Transitions invoked:</b>
 			<span class="sf-toolbar-status">{{collector.logger.transitions_invoked_count}}</span>
 		</div>
@@ -78,6 +83,11 @@
 		</div>
 
 		<div class="metric">
+			<span class="value">{{collector.logger.listings_created_count}}</span>
+			<span class="label">Listings created</span>
+		</div>
+
+		<div class="metric">
 			<span class="value">{{collector.logger.transitions_invoked_count}}</span>
 			<span class="label">Transitions invoked</b>
 		</div>
@@ -92,9 +102,10 @@
 	<table>
 		<col width="1%">
 		<col width="10%">
+		<col width="10%">
 		<col width="20%">
-		<col width="25%">
 		<col>
+		<col width="10%">
 		<thead>
 		<tr>
 			<th>#</th>
@@ -102,6 +113,7 @@
 			<th>ID</th>
 			<th>Event</th>
 			<th>Details</th>
+			<th class="text-right">Class</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -119,8 +131,10 @@
 				{% endif %}
 			</td>
 			{% if e.event is not defined %}
-			<td class="font-normal" colspan="2">
+			<td class="font-normal">
 				Corrupted event:
+			</td>
+			<td class="font-normal">
 				{{dump(e)}}
 			</td>
 			{% elseif e.event == "afterMachineCreated" %}
@@ -134,6 +148,13 @@
 				Property cache pre-heated with:<br>
 				{{dump(e.properties)}}
 				{% endif %}
+			</td>
+			{% elseif e.event == "afterListingCreated" %}
+			<td class="font-normal">
+				Listing created.
+			</td>
+			<td class="font-normal">
+				{{dump(e.filters)}}
 			</td>
 			{% elseif e.event == "beforeTransition" %}
 			<td class="font-normal">
@@ -165,6 +186,11 @@
 				{{dump(e)}}
 			</td>
 			{% endif %}
+			</td>
+			<td class="text-right text-muted" nowrap>
+				{% if e.class is defined %}
+				{{e.class | abbr_class}}
+				{% endif %}
 			</td>
 		</tr>
 		{% endfor %}
