@@ -23,7 +23,7 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
-use Smalldb\SmalldbBundle\AbstractBackend;
+use Smalldb\StateMachine\AbstractBackend;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
 
@@ -48,15 +48,17 @@ class SmalldbExtension extends Extension
 		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
 
                 // Create Smalldb backend
-		$container->register('smalldb', JsonDirBackend::class)
+		$container->autowire(JsonDirBackend::class)
 			->setArguments([$config['smalldb'], null, 'smalldb'])
 			->addMethodCall('setDebugLogger', [new Reference('smalldb.debug_logger')])
 			->addMethodCall('setContext', [new Reference('service_container')])
-			->setShared(true);
-		$container->setAlias(AbstractBackend::class, 'smalldb');
+			->setShared(true)
+			->setPublic(false);
+		$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
+		$container->setAlias('smalldb', AbstractBackend::class);
 
                 // Initialize database connection & query builder
-		$container->register('flupdo', Flupdo::class)
+		$container->autowire('flupdo', Flupdo::class)
 			->setFactory([Flupdo::class, 'createInstanceFromConfig'])
 			->setArguments([$config['flupdo']])
 			->setShared(true);
@@ -68,7 +70,7 @@ class SmalldbExtension extends Extension
                         throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
                 }
 		$container->register('auth', $config['auth']['class'])
-			->setArguments([$config['auth'], new Reference('smalldb')])
+			->setArguments([$config['auth'], new Reference(AbstractBackend::class)])
 			->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
 
 		// Authentication listener
@@ -76,7 +78,7 @@ class SmalldbExtension extends Extension
 			->setArguments([
 				new Reference('security.token_storage'),
 				new Reference('security.authentication.manager'),
-				new Reference('smalldb')
+				new Reference(AbstractBackend::class)
 			])
 			->setPublic(false);
 
@@ -86,7 +88,7 @@ class SmalldbExtension extends Extension
 
 		// Reference resolver
 		$container->register('app.value_resolver.smalldb_reference', ReferenceValueResolver::class)
-			->setArguments([new Reference('smalldb')])
+			->setArguments([new Reference(AbstractBackend::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
                 // Data logger
@@ -95,7 +97,7 @@ class SmalldbExtension extends Extension
 
 		// Web Profiler page
 		$container->register('smalldb.data_collector', SmalldbDataCollector::class)
-			->setArguments([new Reference('smalldb'), new Reference('smalldb.debug_logger')])
+			->setArguments([new Reference(AbstractBackend::class), new Reference('smalldb.debug_logger')])
 			->setPublic(false)
 			->addTag('data_collector', [
 				'template' => '@Smalldb/data_collector/template.html.twig',
