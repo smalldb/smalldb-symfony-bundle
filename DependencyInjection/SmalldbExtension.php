@@ -50,58 +50,57 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		// Process tagged services later
 		$container->addCompilerPass($this);
 
-		// Don't load default services when configuration is completely missing
-		if (empty($config['smalldb'])) {
-			return;
-		}
-
-		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
-
-		// Create default Smalldb backend
-		if (!empty($config['smalldb']['base_dir'])) {
-			$container->autowire(JsonDirBackend::class)
-				->setArguments([$config['smalldb'], null, 'smalldb'])
-				->addMethodCall('setContext', [new Reference('service_container')])
-				->addTag('smalldb.backend')
-				->setShared(true)
-				->setPublic(false);
-			$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
-			$container->setAlias('smalldb', AbstractBackend::class);
-		}
-
-                // Initialize database connection & query builder
-		$container->autowire(Flupdo::class)
-			->setFactory([Flupdo::class, 'createInstanceFromConfig'])
-			->setArguments([$config['flupdo']])
-			->setShared(true);
-		$container->setAlias('flupdo', Flupdo::class);
-		$container->setAlias(\PDO::class, Flupdo::class);
-
-                // Initialize authenticator
-                if (empty($config['auth']['class'])) {
-                        throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
-                }
-		$container->register('auth', $config['auth']['class'])
-			->setArguments([$config['auth'], new Reference(AbstractBackend::class)])
-			->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
-
-		// Authentication listener
-		$container->register('smalldb.security.authentication.listener', SmalldbAuthenticationListener::class)
-			->setArguments([
-				new Reference('security.token_storage'),
-				new Reference('security.authentication.manager'),
-				new Reference(AbstractBackend::class)
-			])
-			->setPublic(false);
-
-		// Authentication provider
-		$container->register('smalldb.security.authentication.provider', SmalldbAuthenticationProvider::class)
-			->setPublic(false);
-
 		// Reference resolver
-		$container->register('app.value_resolver.smalldb_reference', ReferenceValueResolver::class)
+		$container->autowire(ReferenceValueResolver::class)
 			->setArguments([new Reference(AbstractBackend::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
+
+		// Default services
+		if (!empty($config['smalldb'])) {
+
+			$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
+
+			// Create default Smalldb backend
+			if (!empty($config['smalldb']['base_dir'])) {
+				$container->autowire(JsonDirBackend::class)
+					->setArguments([$config['smalldb'], null, 'smalldb'])
+					->addMethodCall('setContext', [new Reference('service_container')])
+					->addTag('smalldb.backend')
+					->setShared(true)
+					->setPublic(false);
+				$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
+				$container->setAlias('smalldb', AbstractBackend::class);
+			}
+
+			// Initialize database connection & query builder
+			$container->autowire(Flupdo::class)
+				->setFactory([Flupdo::class, 'createInstanceFromConfig'])
+				->setArguments([$config['flupdo']])
+				->setShared(true);
+			$container->setAlias('flupdo', Flupdo::class);
+			$container->setAlias(\PDO::class, Flupdo::class);
+
+			// Initialize authenticator
+			if (empty($config['auth']['class'])) {
+				throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
+			}
+			$container->register('auth', $config['auth']['class'])
+				->setArguments([$config['auth'], new Reference(AbstractBackend::class)])
+				->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
+
+			// Authentication listener
+			$container->autowire(SmalldbAuthenticationListener::class)
+				->setArguments([
+					new Reference('security.token_storage'),
+					new Reference('security.authentication.manager'),
+					new Reference(AbstractBackend::class)
+				])
+				->setPublic(false);
+
+			// Authentication provider
+			$container->autowire(SmalldbAuthenticationProvider::class)
+				->setPublic(false);
+		}
 
 		// Developper tools
 		if ($config['debug']) {
