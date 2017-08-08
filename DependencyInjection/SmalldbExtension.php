@@ -31,9 +31,10 @@ use Smalldb\Flupdo\Flupdo;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 
-class SmalldbExtension extends Extension
+class SmalldbExtension extends Extension implements CompilerPassInterface
 {
 	public function load(array $configs, ContainerBuilder $container)
 	{
@@ -41,36 +42,40 @@ class SmalldbExtension extends Extension
 		$configuration = new Configuration();
 		$config = $this->processConfiguration($configuration, $configs);
 
-		// Don't load anything when configuration is completely missing
+		// Create Smalldb entry point
+		$smalldb_definition = $container->autowire(Smalldb::class)
+			->setShared(true)
+			->setPublic(true);
+
+		// Process tagged services later
+		$container->addCompilerPass($this);
+
+		// Don't load default services when configuration is completely missing
 		if (empty($config['smalldb'])) {
 			return;
 		}
 
 		$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
 
-		// Create Smalldb entry point
-		$container->autowire(Smalldb::class)
-			->addMethodCall('registerBackend', [new Reference(AbstractBackend::class)])
-			->setShared(true)
-			->setPublic(true);
-
-                // Create Smalldb backend
-		$container->autowire(JsonDirBackend::class)
-			->setArguments([$config['smalldb'], null, 'smalldb'])
-			->addMethodCall('setDebugLogger', [new Reference('smalldb.debug_logger')])
-			->addMethodCall('setContext', [new Reference('service_container')])
-			->setShared(true)
-			->setPublic(false);
-		$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
-		$container->setAlias('smalldb', AbstractBackend::class);
+		// Create default Smalldb backend
+		if (!empty($config['smalldb']['base_dir'])) {
+			$container->autowire(JsonDirBackend::class)
+				->setArguments([$config['smalldb'], null, 'smalldb'])
+				->addMethodCall('setContext', [new Reference('service_container')])
+				->addTag('smalldb.backend')
+				->setShared(true)
+				->setPublic(false);
+			$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
+			$container->setAlias('smalldb', AbstractBackend::class);
+		}
 
                 // Initialize database connection & query builder
-		$container->autowire('flupdo', Flupdo::class)
+		$container->autowire(Flupdo::class)
 			->setFactory([Flupdo::class, 'createInstanceFromConfig'])
 			->setArguments([$config['flupdo']])
 			->setShared(true);
-		$container->setAlias(Flupdo::class, 'flupdo');
-		$container->setAlias(\PDO::class, 'flupdo');
+		$container->setAlias('flupdo', Flupdo::class);
+		$container->setAlias(\PDO::class, Flupdo::class);
 
                 // Initialize authenticator
                 if (empty($config['auth']['class'])) {
@@ -98,19 +103,40 @@ class SmalldbExtension extends Extension
 			->setArguments([new Reference(AbstractBackend::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
-                // Data logger
-		$container->register('smalldb.debug_logger', DebugLogger::class)
-			->setPublic(false);
+		// Developper tools
+		if ($config['debug']) {
+			// Register debugger
+			$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
 
-		// Web Profiler page
-		$container->register('smalldb.data_collector', SmalldbDataCollector::class)
-			->setArguments([new Reference(Smalldb::class), new Reference('smalldb.debug_logger')])
-			->setPublic(false)
-			->addTag('data_collector', [
-				'template' => '@Smalldb/data_collector/template.html.twig',
-				'id'       => 'smalldb',
-				'priority' => 270,
-			]);
+			// Data logger
+			$container->register(DebugLogger::class)
+				->setPublic(false);
+
+			// Web Profiler page
+			$container->autowire(SmalldbDataCollector::class)
+				->setArguments([new Reference(Smalldb::class), new Reference(DebugLogger::class)])
+				->setPublic(false)
+				->addTag('data_collector', [
+					'template' => '@Smalldb/data_collector/template.html.twig',
+					'id'       => 'smalldb',
+					'priority' => 270,
+				]);
+		}
 	}
+
+
+	public function process(ContainerBuilder $container)
+	{
+		if (!$container->has(Smalldb::class)) {
+			return;
+		}
+		$smalldb_definition = $container->findDefinition(Smalldb::class);
+
+		$tagged_services = $container->findTaggedServiceIds('smalldb.backend');
+		foreach ($tagged_services as $id => $tags) {
+			$smalldb_definition->addMethodCall('registerBackend', array(new Reference($id)));
+		}
+	}
+
 }
 
