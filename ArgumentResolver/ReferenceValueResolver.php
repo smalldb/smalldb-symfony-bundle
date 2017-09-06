@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\Controller\ArgumentValueResolverInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Smalldb\StateMachine\Reference;
-use Smalldb\StateMachine\AbstractBackend;
+use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\InvalidReferenceException;
 
 
@@ -34,7 +34,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	protected $smalldb;
 
 	
-	public function __construct(AbstractBackend $smalldb)
+	public function __construct(Smalldb $smalldb)
 	{
 		$this->smalldb = $smalldb;
 	}

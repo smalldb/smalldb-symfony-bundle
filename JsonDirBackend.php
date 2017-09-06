@@ -37,25 +37,11 @@ use \Symfony\Component\DependencyInjection\ContainerInterface;
  *   - BPMN: Process diagrams in standard BPMN XML file. See BpmnReader.
  *       - Extensions: `.bpmn`
  *
+ * @see \Smalldb\StateMachine\JsonDirBackend
+ *
  */
 class JsonDirBackend extends \Smalldb\StateMachine\JsonDirBackend
-	implements ContainerAwareInterface
 {
-
-	public function setContainer(ContainerInterface $container = null)
-	{
-		$this->setContext($container);
-	}
-
-
-	public function getContext($resource = null)
-	{
-		if ($resource !== null) {
-			return parent::getContext()->get($resource);
-		} else {
-			return parent::getContext();
-		}
-	}
-
+	// This is a place reserved for little tweaks to integrate with Symfony
 }
 

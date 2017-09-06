@@ -35,73 +35,73 @@ class DebugLogger implements IDebugLogger
 	public $transitions_invoked_count = 0;
 
 
-	function afterDebugLoggerRegistered(AbstractBackend $smalldb)
+	function afterDebugLoggerRegistered(AbstractBackend $backend)
 	{
-		$this->machines_defined_count = count($smalldb->getKnownTypes());
+		$this->machines_defined_count = count($backend->getKnownTypes());
 	}
 
 
-	function afterMachineCreated(AbstractBackend $smalldb, string $type, AbstractMachine $machine)
+	function afterMachineCreated(AbstractBackend $backend = null, string $type, AbstractMachine $machine)
 	{
 		$this->machines_created_count++;
 		$this->log[] = [
-			'backend' => get_class($smalldb),
+			'backend' => $backend ? get_class($backend) : null,
 			'event' => 'afterMachineCreated',
 			'machine_type' => $type,
-			'class' => get_class($machine),
+			'class' => $machine ? get_class($machine) : null,
 		];
 	}
 
-	function afterReferenceCreated(AbstractBackend $smalldb, Reference $ref, array $properties = null)
+	function afterReferenceCreated(AbstractBackend $backend = null, Reference $ref, array $properties = null)
 	{
 		$this->references_created_count++;
 		$this->log[] = [
-			'backend' => get_class($smalldb),
+			'backend' => $backend ? get_class($backend) : null,
 			'event' => 'afterReferenceCreated',
 			'machine_type' => $ref->machine_type,
 			'id' => $ref->id,
-			'class' => get_class($ref),
+			'class' => $ref ? get_class($ref) : null,
 			'properties' => $properties,
 		];
 	}
 
-	function afterListingCreated(AbstractBackend $smalldb, IListing $listing, array $filters)
+	function afterListingCreated(AbstractBackend $backend = null, IListing $listing, array $filters)
 	{
 		$this->listings_created_count++;
 		$this->log[] = [
-			'backend' => get_class($smalldb),
+			'backend' => $backend ? get_class($backend) : null,
 			'event' => 'afterListingCreated',
 			'machine_type' => $filters['type'] ?? null,
-			'class' => get_class($listing),
+			'class' => $listing ? get_class($listing) : null,
 			'filters' => $filters,
 			//'processed_filters' => $listing->getProcessedFilters(),
 			//'unknown_filters' => $listing->getUnknownFilters(),
 		];
 	}
 
-	function beforeTransition(AbstractBackend $smalldb, Reference $ref, string $old_state, string $transition_name, $args)
+	function beforeTransition(AbstractMachine $machine, Reference $ref, string $old_state, string $transition_name, $args)
 	{
 		$this->transitions_invoked_count++;
 		$this->log[] = [
-			'backend' => get_class($smalldb),
+			'backend' => null,
 			'event' => 'beforeTransition',
-			'machine_type' => $ref->machine_type,
+			'machine_type' => $machine->getMachineType(),
 			'id' => $ref->id,
-			'class' => get_class($ref->machine),
+			'class' => $machine ? get_class($machine) : null,
 			'old_state' => $old_state,
 			'transition' => $transition_name,
 			'args' => $args,
 		];
 	}
 
-	function afterTransition(AbstractBackend $smalldb, Reference $ref, string $old_state, string $transition_name, string $new_state, $return_value, $returns)
+	function afterTransition(AbstractMachine $machine, Reference $ref, string $old_state, string $transition_name, string $new_state, $return_value, $returns)
 	{
 		$this->log[] = [
-			'backend' => get_class($smalldb),
+			'backend' => null,
 			'event' => 'afterTransition',
-			'machine_type' => $ref->machine_type,
+			'machine_type' => $machine->getMachineType(),
 			'id' => $ref->id,
-			'class' => get_class($ref->machine),
+			'class' => $machine ? get_class($machine) : null,
 			'old_state' => $old_state,
 			'transition' => $transition_name,
 			'new_state' => $new_state,

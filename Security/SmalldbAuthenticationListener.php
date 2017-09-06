@@ -18,7 +18,7 @@
 
 namespace Smalldb\SmalldbBundle\Security;
 
-use Smalldb\StateMachine\AbstractBackend;
+use Smalldb\StateMachine\Smalldb;
 
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\Security\Http\Firewall\ListenerInterface;
@@ -38,7 +38,7 @@ class SmalldbAuthenticationListener implements ListenerInterface
 	/**
 	 * Constructor.
 	 */
-	public function __construct(TokenStorageInterface $tokenStorage, AuthenticationProviderManager $manager, AbstractBackend $smalldb)
+	public function __construct(TokenStorageInterface $tokenStorage, AuthenticationProviderManager $manager, Smalldb $smalldb)
 	{
 		$this->smalldb = $smalldb;
 		$this->tokenStorage = $tokenStorage;

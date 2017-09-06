@@ -46,14 +46,20 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		$smalldb_definition = $container->autowire(Smalldb::class)
 			->setShared(true)
 			->setPublic(true);
+		$container->setAlias('smalldb', Smalldb::class);
 
 		// Process tagged services later
 		$container->addCompilerPass($this);
 
 		// Reference resolver
 		$container->autowire(ReferenceValueResolver::class)
-			->setArguments([new Reference(AbstractBackend::class)])
+			->setArguments([new Reference(Smalldb::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
+
+		// Default machine implementations as services
+		$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true);
+		$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true);
+		$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true);
 
 		// Default services
 		if (!empty($config['smalldb'])) {
@@ -63,13 +69,10 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
 				$container->autowire(JsonDirBackend::class)
-					->setArguments([$config['smalldb'], null, 'smalldb'])
-					->addMethodCall('setContext', [new Reference('service_container')])
+					->setArguments([$config['smalldb'], new Reference('service_container')])
 					->addTag('smalldb.backend')
 					->setShared(true)
 					->setPublic(false);
-				$container->setAlias(AbstractBackend::class, JsonDirBackend::class);
-				$container->setAlias('smalldb', AbstractBackend::class);
 			}
 
 			// Initialize database connection & query builder
@@ -85,7 +88,7 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 				throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
 			}
 			$container->register('auth', $config['auth']['class'])
-				->setArguments([$config['auth'], new Reference(AbstractBackend::class)])
+				->setArguments([$config['auth'], new Reference(Smalldb::class)])
 				->addMethodCall('checkSession');	// FIXME: Isn't this supposed to be in the authentication listener ?
 
 			// Authentication listener
@@ -93,7 +96,7 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 				->setArguments([
 					new Reference('security.token_storage'),
 					new Reference('security.authentication.manager'),
-					new Reference(AbstractBackend::class)
+					new Reference(Smalldb::class)
 				])
 				->setPublic(false);
 
