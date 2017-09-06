@@ -165,17 +165,39 @@
 				{{dump(e)}}
 			</td>
 			{% elseif e.event == "afterMachineCreated" %}
-			<td class="font-normal text-muted" colspan="2">
+			<td class="font-normal text-muted">
 				Machine created.
 			</td>
-			{% elseif e.event == "afterReferenceCreated" %}
-			<td class="font-normal" colspan="2">
-				Reference created.
-				{% if e.properties is defined and e.properties %}
-				Property cache pre-heated with:<br>
-				{{dump(e.properties)}}
+			<td class="font-normal text-muted">
+				{% if e.backend %}
+				by {{e.backend | abbr_class}}
 				{% endif %}
 			</td>
+			{% elseif e.event == "afterReferenceCreated" %}
+				{% if e.properties is defined and e.properties %}
+			<td class="font-normal">
+				Reference created (cache&nbsp;preheated).
+			</td>
+			<td class="font-normal">
+				<span style="border: 1px solid; border-radius: 1em; padding: 0.2em 0.6em;">
+					{%- if e.properties['state'] %}<span>{{e.properties['state']}}</span>{% else %}<i class="text-muted">not exists</i>{% endif -%}
+				</span>
+				{# Try to show something useful, but not everything as it is usually too much #}
+				{% if e.properties['title'] is defined %}
+				{{dump(e.properties['title'])}}
+				{% elseif e.properties['name'] is defined %}
+				{{dump(e.properties['name'])}}
+				{% elseif e.properties['label'] is defined %}
+				{{dump(e.properties['label'])}}
+				{% elseif e.properties['login'] is defined %}
+				{{dump(e.properties['login'])}}
+				{% endif %}
+			</td>
+				{% else %}
+			<td class="font-normal" colspan="2">
+				Reference created.
+			</td>
+				{% endif %}
 			{% elseif e.event == "afterListingCreated" %}
 			<td class="font-normal">
 				Listing created.
