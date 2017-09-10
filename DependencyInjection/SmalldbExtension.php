@@ -27,6 +27,7 @@ use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\AbstractBackend;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
+use Smalldb\Flupdo\IFlupdo;
 
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
@@ -76,12 +77,13 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			}
 
 			// Initialize database connection & query builder
-			$container->autowire(Flupdo::class)
+			$container->autowire(IFlupdo::class)
 				->setFactory([Flupdo::class, 'createInstanceFromConfig'])
 				->setArguments([$config['flupdo']])
 				->setShared(true);
-			$container->setAlias('flupdo', Flupdo::class);
-			$container->setAlias(\PDO::class, Flupdo::class);
+			$container->setAlias('flupdo', IFlupdo::class);
+			$container->setAlias(Flupdo::class, IFlupdo::class);
+			$container->setAlias(\PDO::class, IFlupdo::class);
 
 			// Initialize authenticator
 			if (empty($config['auth']['class'])) {
