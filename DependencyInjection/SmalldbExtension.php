@@ -57,10 +57,10 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			->setArguments([new Reference(Smalldb::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
-		// Default machine implementations as services
-		$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true);
-		$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true);
-		$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true);
+		// Default machine implementations as non-shared services
+		$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true)->setShared(false);
+		$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true)->setShared(false);
+		$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true)->setShared(false);
 
 		// Default services
 		if (!empty($config['smalldb'])) {
