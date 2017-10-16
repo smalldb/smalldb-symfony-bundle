@@ -62,12 +62,6 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true)->setShared(false);
 		$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true)->setShared(false);
 
-		// Commands
-		$container->autowire(\Smalldb\SmalldbBundle\Command\CompileSmalldbCommand::class)
-			->addTag('console.command')
-			->setPublic(false)
-			->setShared(false);
-
 		// Default services
 		if (!empty($config['smalldb'])) {
 
@@ -111,6 +105,14 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			// Authentication provider
 			$container->autowire(SmalldbAuthenticationProvider::class)
 				->setPublic(false);
+
+			// Compile command
+			$container->autowire(\Smalldb\SmalldbBundle\Command\CompileSmalldbCommand::class)
+				->setArguments([new Reference(Smalldb::class), $config['smalldb']['code_dest_dir']])
+				->addTag('console.command')
+				->setPublic(false)
+				->setShared(false);
+
 		}
 
 		// Developper tools

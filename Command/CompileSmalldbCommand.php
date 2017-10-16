@@ -32,15 +32,17 @@ use Smalldb\StateMachine\Compiler\ReferenceFactoryCompiler;
 class CompileSmalldbCommand extends Command
 {
 	private $smalldb;
+	private $dest_dir;
 
 
 	/**
 	 * CompileSmalldbCommand constructor.
 	 */
-	public function __construct(Smalldb $smalldb)
+	public function __construct(Smalldb $smalldb, string $dest_dir)
 	{
 		parent::__construct();
 		$this->smalldb = $smalldb;
+		$this->dest_dir = $dest_dir;
 	}
 
 
@@ -62,7 +64,11 @@ class CompileSmalldbCommand extends Command
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$compiler = new ReferenceFactoryCompiler($this->smalldb);
-		$compiler->compile();
+
+		if (!file_exists($this->dest_dir)) {
+			mkdir($this->dest_dir);
+		}
+		$compiler->compile($this->dest_dir);
 	}
 
 }
