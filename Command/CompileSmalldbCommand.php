@@ -24,6 +24,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\Compiler\ReferenceFactoryCompiler;
+use Smalldb\StateMachine\Compiler\ReferenceCompiler;
 
 
 /**
@@ -63,12 +64,17 @@ class CompileSmalldbCommand extends Command
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$compiler = new ReferenceFactoryCompiler($this->smalldb);
-
 		if (!file_exists($this->dest_dir)) {
 			mkdir($this->dest_dir);
 		}
-		$compiler->compile($this->dest_dir);
+
+		$factory_compiler = new ReferenceFactoryCompiler($this->smalldb);
+		$factory_compiler->compile($this->dest_dir);
+
+		foreach ($this->smalldb->getAllMachines() as $machine) {
+			$compiler = new ReferenceCompiler($machine);
+			$compiler->compile($this->dest_dir);
+		}
 	}
 
 }
