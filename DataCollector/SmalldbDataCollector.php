@@ -23,7 +23,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Smalldb\StateMachine\Smalldb;
-use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 
 
 class SmalldbDataCollector extends DataCollector
@@ -56,6 +55,12 @@ class SmalldbDataCollector extends DataCollector
 	}
 
 
+	public function reset()
+	{
+		$this->references_created_count = 0;
+	}
+
+
 	public function getName()
 	{
 		return 'smalldb';
@@ -66,6 +71,7 @@ class SmalldbDataCollector extends DataCollector
 	{
 		return $this->data[$key];
 	}
+
 
 	public function __isset($key)
 	{

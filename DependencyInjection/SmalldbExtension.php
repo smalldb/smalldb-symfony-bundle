@@ -24,7 +24,6 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 use Smalldb\StateMachine\Smalldb;
-use Smalldb\StateMachine\AbstractBackend;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
 use Smalldb\Flupdo\IFlupdo;
@@ -48,9 +47,6 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			->setShared(true)
 			->setPublic(true);
 		$container->setAlias('smalldb', Smalldb::class);
-
-		// Process tagged services later
-		$container->addCompilerPass($this);
 
 		// Reference resolver
 		$container->autowire(ReferenceValueResolver::class)
