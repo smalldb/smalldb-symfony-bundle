@@ -18,6 +18,7 @@
 
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
+use Smalldb\Flupdo\FlupdoWrapper;
 use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
@@ -61,8 +62,6 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		// Default services
 		if (!empty($config['smalldb'])) {
 
-			$config['smalldb']['machine_global_config']['flupdo_resource'] = 'flupdo';
-
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
 				$container->autowire(JsonDirBackend::class)
@@ -73,17 +72,27 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			}
 
 			// Initialize database connection & query builder
-			$container->autowire(IFlupdo::class)
-				->setFactory([Flupdo::class, 'createInstanceFromConfig'])
-				->setArguments([$config['flupdo']])
-				->setShared(true);
-			$container->setAlias('flupdo', IFlupdo::class);
-			$container->setAlias(Flupdo::class, IFlupdo::class);
-			$container->setAlias(\PDO::class, IFlupdo::class);
+			if (!empty($config['flupdo']['wrapper_class'])) {
+				$wrapper = $container->autowire(IFlupdo::class)
+					->setClass($config['flupdo']['wrapper_class'])
+					->setShared(true);
+				if ($config['flupdo']['wrapped_service']) {
+					$wrapper->setArguments([new Reference($config['flupdo']['wrapped_service'])]);
+				}
+				$container->setAlias(FlupdoWrapper::class, IFlupdo::class)->setPublic(true);
+			} else if (!empty($config['flupdo']['driver']) || !empty($config['flupdo']['dsn'])) {
+				$container->autowire(IFlupdo::class)
+					->setFactory([Flupdo::class, 'createInstanceFromConfig'])
+					->setArguments([$config['flupdo']])
+					->setShared(true);
+				$container->setAlias(Flupdo::class, IFlupdo::class)->setPublic(true);
+				$container->setAlias(\PDO::class, IFlupdo::class)->setPublic(true);
+			}
+			$container->setAlias('flupdo', IFlupdo::class)->setPublic(true);
 
 			// Initialize authenticator
 			if (empty($config['auth']['class'])) {
-				throw new InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
+				throw new \InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
 			}
 			$container->register('auth', $config['auth']['class'])
 				->setArguments([$config['auth'], new Reference(Smalldb::class)])
