@@ -24,10 +24,10 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\StateMachine\JsonDirBackend;
 use Smalldb\StateMachine\JsonDirReader;
 use Smalldb\StateMachine\SimpleBackend;
 use Smalldb\StateMachine\Smalldb;
-use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
 use Smalldb\Flupdo\IFlupdo;
 
@@ -65,15 +65,23 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
-				$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir'], $config['smalldb']['file_readers'] ?? [], $config['smalldb']['machine_global_config'] ?? []);
-				$backend_config_reader->detectConfiguration();
+				$cache_enabled = !($config['smalldb']['cache_disabled'] ?? false); // JsonDirBackend respects cache_disabled too.
 
-				$container->autowire(SimpleBackend::class)
+				$backend = $container->autowire($cache_enabled ? SimpleBackend::class : JsonDirBackend::class)
 					->addMethodCall('setStateMachineServiceLocator', [new Reference('service_container')])
 					->addMethodCall('initializeBackend', [$config['smalldb']])
-					->addMethodCall('registerAllMachineTypes', [$backend_config_reader->loadConfiguration()])
 					->addTag('smalldb.backend')
 					->setShared(true);
+
+				if ($cache_enabled) {
+					// Bake configuration into the DI container.
+					$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir'],
+						$config['smalldb']['file_readers'] ?? [],
+						$config['smalldb']['machine_global_config'] ?? []);
+					$backend_config_reader->detectConfiguration();
+					$backend_config = $backend_config_reader->loadConfiguration();
+					$backend->addMethodCall('registerAllMachineTypes', [$backend_config]);
+				}
 			}
 
 			// Initialize authenticator
