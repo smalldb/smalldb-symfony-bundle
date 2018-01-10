@@ -54,41 +54,20 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			->setArguments([new Reference(Smalldb::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
-		// Default machine implementations as non-shared services
-		$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true)->setShared(false);
-		$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true)->setShared(false);
-		$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true)->setShared(false);
-
 		// Default services
 		if (!empty($config['smalldb'])) {
+			// Default machine implementations as non-shared services
+			$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true)->setShared(false);
+			$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true)->setShared(false);
+			$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true)->setShared(false);
 
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
 				$container->autowire(JsonDirBackend::class)
 					->setArguments([$config['smalldb'], new Reference('service_container')])
 					->addTag('smalldb.backend')
-					->setShared(true)
-					->setPublic(false);
-			}
-
-			// Initialize database connection & query builder
-			if (!empty($config['flupdo']['wrapper_class'])) {
-				$wrapper = $container->autowire(IFlupdo::class)
-					->setClass($config['flupdo']['wrapper_class'])
 					->setShared(true);
-				if ($config['flupdo']['wrapped_service']) {
-					$wrapper->setArguments([new Reference($config['flupdo']['wrapped_service'])]);
-				}
-				$container->setAlias(FlupdoWrapper::class, IFlupdo::class)->setPublic(true);
-			} else if (!empty($config['flupdo']['driver']) || !empty($config['flupdo']['dsn'])) {
-				$container->autowire(IFlupdo::class)
-					->setFactory([Flupdo::class, 'createInstanceFromConfig'])
-					->setArguments([$config['flupdo']])
-					->setShared(true);
-				$container->setAlias(Flupdo::class, IFlupdo::class)->setPublic(true);
-				$container->setAlias(\PDO::class, IFlupdo::class)->setPublic(true);
 			}
-			$container->setAlias('flupdo', IFlupdo::class)->setPublic(true);
 
 			// Initialize authenticator
 			if (empty($config['auth']['class'])) {
@@ -104,20 +83,37 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 					new Reference('security.token_storage'),
 					new Reference('security.authentication.manager'),
 					new Reference(Smalldb::class)
-				])
-				->setPublic(false);
+				]);
 
 			// Authentication provider
-			$container->autowire(SmalldbAuthenticationProvider::class)
-				->setPublic(false);
+			$container->autowire(SmalldbAuthenticationProvider::class);
 
 			// Compile command
 			$container->autowire(\Smalldb\SmalldbBundle\Command\CompileSmalldbCommand::class)
 				->setArguments([new Reference(Smalldb::class), $config['smalldb']['code_dest_dir']])
 				->addTag('console.command')
-				->setPublic(false)
 				->setShared(false);
+		}
 
+		// Database connection & query builder
+		if (!empty($config['flupdo'])) {
+			if (!empty($config['flupdo']['wrapper_class'])) {
+				$wrapper = $container->autowire(IFlupdo::class)
+					->setClass($config['flupdo']['wrapper_class'])
+					->setShared(true);
+				if ($config['flupdo']['wrapped_service']) {
+					$wrapper->setArguments([new Reference($config['flupdo']['wrapped_service'])]);
+				}
+				$container->setAlias(FlupdoWrapper::class, IFlupdo::class);
+			} else if (!empty($config['flupdo']['driver']) || !empty($config['flupdo']['dsn'])) {
+				$container->autowire(IFlupdo::class)
+					->setFactory([Flupdo::class, 'createInstanceFromConfig'])
+					->setArguments([$config['flupdo']])
+					->setShared(true);
+				$container->setAlias(Flupdo::class, IFlupdo::class);
+				$container->setAlias(\PDO::class, IFlupdo::class);
+			}
+			$container->setAlias('flupdo', IFlupdo::class)->setPublic(true);
 		}
 
 		// Developper tools
@@ -126,13 +122,11 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
 
 			// Data logger
-			$container->register(DebugLogger::class)
-				->setPublic(false);
+			$container->register(DebugLogger::class);
 
 			// Web Profiler page
 			$container->autowire(SmalldbDataCollector::class)
 				->setArguments([new Reference(Smalldb::class), new Reference(DebugLogger::class)])
-				->setPublic(false)
 				->addTag('data_collector', [
 					'template' => '@Smalldb/data_collector/template.html.twig',
 					'id'       => 'smalldb',
