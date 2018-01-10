@@ -1,0 +1,31 @@
+<h2>Smalldb machine: <b>{{ machine_type }}</b></h2>
+
+<div style="padding: 2em; border: 1px solid #eee; background: #fff; overflow: auto;">
+	<svg id="smalldb_diagram"
+			data-graph='{{ statechart|json_encode(constant('JSON_HEX_APOS')+constant('JSON_HEX_AMP'))|raw }}'
+			style="margin: auto; display: block; overflow: visible;"
+		></svg>
+</div>
+
+<h3>State machine properties:</h3>
+{{ dump(machine.describeAllMachineProperties()) }}
+
+<h3>State machine views:</h3>
+{{ dump(machine.describeAllMachineViews()) }}
+
+<h3>State machine references:</h3>
+{{ dump(machine.describeAllMachineReferences()) }}
+
+{# FIXME: Link to JS file rather than inline it. #}
+<!-- <script type="text/javascript" src="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'grafovatko' }) }}"></script> -->
+<script type="text/javascript">
+	//<![CDATA[
+		{{ grafovatko_js|raw }}
+	//]]>
+</script>
+
+<script type="text/javascript">
+	new G.GraphView('svg#smalldb_diagram');
+</script>
+
+

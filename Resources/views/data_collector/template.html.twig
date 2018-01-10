@@ -65,6 +65,19 @@
 
 
 {% block panel %}
+	{% if page == 'machine' %}
+		{{ render(controller('SmalldbBundle:Profiler:machine', {
+			token: token,
+			panel: panel,
+			machine_type: request.query.get('machine'),
+		})) }}
+	{% else %}
+		{{ block('activity_log') }}
+	{% endif %}
+{% endblock %}
+
+
+{% block activity_log %}
 	<h2>Smalldb</h2>
 
 	<div class="metrics">
@@ -112,7 +125,7 @@
 		<dt><b>{{backend.class}}:</b></dt>
 		<dd>
 			{% for type in backend.known_types -%}
-				<span>{{type}}</span>{% if not loop.last %}, {% endif %}
+				<span><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></span>{% if not loop.last %}, {% endif %}
 			{%- endfor %}
 		</dd>
 	{% endfor %}
@@ -149,7 +162,7 @@
 			<td nowrap class="text-muted">{{i}}</td>
 			<td nowrap>
 				{% if e.machine_type is defined %}
-				{{e.machine_type}}
+				<a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: e.machine_type }) }}">{{e.machine_type}}</a>
 				{% endif %}
 			</td>
 			<td nowrap>
@@ -246,6 +259,5 @@
 		</tbody>
 	</table>
 	{% endif %}
-
 {% endblock %}
 

@@ -20,6 +20,7 @@ namespace Smalldb\SmalldbBundle\DependencyInjection;
 
 use Smalldb\Flupdo\FlupdoWrapper;
 use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
+use Smalldb\SmalldbBundle\Controller\ProfilerController;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
@@ -49,7 +50,8 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		$smalldb_definition = $container->autowire(Smalldb::class)
 			->setShared(true)
 			->setPublic(true);
-		$container->setAlias('smalldb', Smalldb::class);
+		$container->setAlias('smalldb', Smalldb::class)
+			->setPublic(true);
 
 		// Reference resolver
 		$container->autowire(ReferenceValueResolver::class)
