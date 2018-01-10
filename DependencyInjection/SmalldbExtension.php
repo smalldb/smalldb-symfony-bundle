@@ -24,6 +24,8 @@ use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\StateMachine\JsonDirReader;
+use Smalldb\StateMachine\SimpleBackend;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\SmalldbBundle\JsonDirBackend;
 use Smalldb\Flupdo\Flupdo;
@@ -63,9 +65,13 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
-				$container->autowire(JsonDirBackend::class)
+				$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir'], $config['smalldb']['file_readers'] ?? [], $config['smalldb']['machine_global_config'] ?? []);
+				$backend_config_reader->detectConfiguration();
+
+				$container->autowire(SimpleBackend::class)
 					->addMethodCall('setStateMachineServiceLocator', [new Reference('service_container')])
 					->addMethodCall('initializeBackend', [$config['smalldb']])
+					->addMethodCall('registerAllMachineTypes', [$backend_config_reader->loadConfiguration()])
 					->addTag('smalldb.backend')
 					->setShared(true);
 			}
