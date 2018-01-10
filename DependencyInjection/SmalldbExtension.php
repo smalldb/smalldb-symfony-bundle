@@ -64,7 +64,8 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			// Create default Smalldb backend
 			if (!empty($config['smalldb']['base_dir'])) {
 				$container->autowire(JsonDirBackend::class)
-					->setArguments([$config['smalldb'], new Reference('service_container')])
+					->addMethodCall('setStateMachineServiceLocator', [new Reference('service_container')])
+					->addMethodCall('initializeBackend', [$config['smalldb']])
 					->addTag('smalldb.backend')
 					->setShared(true);
 			}

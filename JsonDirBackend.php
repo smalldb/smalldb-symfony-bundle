@@ -18,8 +18,9 @@
 
 namespace Smalldb\SmalldbBundle;
 
-use \Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use \Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 
 /**
  * Smalldb Backend which loads state machine definitions from a directory full 
@@ -40,8 +41,15 @@ use \Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Smalldb\StateMachine\JsonDirBackend
  *
  */
-class JsonDirBackend extends \Smalldb\StateMachine\JsonDirBackend
+class JsonDirBackend extends \Smalldb\StateMachine\JsonDirBackend implements ContainerAwareInterface
 {
-	// This is a place reserved for little tweaks to integrate with Symfony
+	/**
+	 * Require Symfony's DI container to implement ContainerAwareInterface.
+	 */
+	public function setContainer(ContainerInterface $container = null)
+	{
+		return parent::setContainer($container);
+	}
+
 }
 
