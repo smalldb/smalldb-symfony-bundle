@@ -1,6 +1,6 @@
 <h2>Smalldb machine: <b>{{ machine_type }}</b></h2>
 
-<div style="padding: 2em; border: 1px solid #eee; background: #fff; overflow: auto;">
+<div class="card" style="padding: 3em; overflow: auto;">
 	<svg id="smalldb_diagram"
 			data-graph='{{ statechart|json_encode(constant('JSON_HEX_APOS')+constant('JSON_HEX_AMP'))|raw }}'
 			style="margin: auto; display: block; overflow: visible;"

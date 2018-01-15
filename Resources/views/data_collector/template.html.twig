@@ -65,6 +65,16 @@
 
 
 {% block panel %}
+	<h2>Smalldb</h2>
+
+	{% if page == 'home' %}
+		{{  block('stats') }}
+
+		<h3>Registered Backends &amp; Defined State Machines</h3>
+	{% endif %}
+
+	{{ block('navigation') }}
+
 	{% if page == 'machine' %}
 		{{ render(controller('SmalldbBundle:Profiler:machine', {
 			token: token,
@@ -77,8 +87,7 @@
 {% endblock %}
 
 
-{% block activity_log %}
-	<h2>Smalldb</h2>
+{% block stats %}
 
 	<div class="metrics">
 		<div class="metric">
@@ -112,27 +121,41 @@
 		</div>
 	</div>
 
+{% endblock %}
 
-	<h3>Registered Backends &amp; Defined State Machines</h3>
 
-	{% if collector.backends is empty %}
-	<div class="empty">
-		<p>No backends registered.</p>
+{% block navigation %}
+
+	<div class="card">
+
+		{% if collector.backends is empty %}
+			<div class="empty">
+				<p>No backends registered.</p>
+			</div>
+		{% else %}
+			<dl>
+				{% for backend in collector.backends %}
+					<dt><b>{{backend.class}}:</b></dt>
+					<dd>
+						{% for type in backend.known_types -%}
+							{%- if page == "machine" and request.query.get('machine') == type -%}
+								<b class="status-warning"><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></b>
+							{%- else -%}
+								<span><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></span>
+							{%- endif -%}
+							{%- if not loop.last -%}, {% endif %}
+						{%- endfor %}
+					</dd>
+				{% endfor %}
+			</dl>
+		{% endif %}
 	</div>
-	{% else %}
-	<dl>
-	{% for backend in collector.backends %}
-		<dt><b>{{backend.class}}:</b></dt>
-		<dd>
-			{% for type in backend.known_types -%}
-				<span><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></span>{% if not loop.last %}, {% endif %}
-			{%- endfor %}
-		</dd>
-	{% endfor %}
-	</dl>
-	{% endif %}
 
-	
+{% endblock %}
+
+
+{% block activity_log %}
+
 	<h3>Activity Log</h3>
 	{% if collector.logger.log is empty %}
 	<div class="empty">
