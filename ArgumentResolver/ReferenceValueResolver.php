@@ -33,10 +33,31 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 {
 	protected $smalldb;
 
-	
+	protected $referenceClassNames;
+
+
 	public function __construct(Smalldb $smalldb)
 	{
 		$this->smalldb = $smalldb;
+
+		// Collect reference class names for argument resolver
+		$this->referenceClassNames = [];
+		foreach ($this->smalldb->getBackends() as $backend) {
+			foreach($backend->getKnownTypes() as $m) {
+				$machine = $backend->getMachine($smalldb, $m);
+				if (!$machine) {
+					continue;
+				}
+				$referenceClassName = $machine->getReferenceClassName();
+				if ($referenceClassName !== Reference::class) {
+					if (isset($this->referenceClassNames[$referenceClassName])) {
+						throw new \RuntimeException("Reference class $referenceClassName used by multiple machines.");
+					} else {
+						$this->referenceClassNames[$referenceClassName] = $machine;
+					}
+				}
+			}
+		}
 	}
 
 
@@ -45,7 +66,11 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	 */
 	public function supports(Request $request, ArgumentMetadata $argument)
 	{
-		return Reference::class == $argument->getType() && $request->attributes->has($argument->getName());
+		if (isset($this->referenceClassNames[$argument->getType()])) {
+			return $request->attributes->has($argument->getName());
+		} else {
+			return false;
+		}
 
 		// $path = $request->attributes->get($argument->getName());
 		// return $this->smalldb->inferMachineType(explode('/', $path), $m_type, $m_id);
@@ -57,11 +82,17 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	 */
 	public function resolve(Request $request, ArgumentMetadata $argument)
 	{
-		$path = $request->attributes->get($argument->getName());
+		$machine = $this->referenceClassNames[$argument->getType()];
+		$arg = $request->attributes->get($argument->getName());
+		yield $machine->ref($arg);
+
+		/*
+		$path = $arg;
 		if (!is_array($path)) {
 			$path = explode('/', $path);
 		}
 		yield $this->smalldb->ref($path);
+		*/
 	}
 
 }
