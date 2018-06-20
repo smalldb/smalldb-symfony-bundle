@@ -32,6 +32,7 @@ use Smalldb\StateMachine\Smalldb;
 use Smalldb\Flupdo\Flupdo;
 use Smalldb\Flupdo\IFlupdo;
 
+use Symfony\Component\DependencyInjection\Parameter;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -54,7 +55,7 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 			->setPublic(true);
 
 		// Reference resolver
-		$container->autowire(ReferenceValueResolver::class)
+		$refResolver = $container->autowire(ReferenceValueResolver::class)
 			->setArguments([new Reference(Smalldb::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
@@ -77,12 +78,13 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 
 				if ($cache_enabled) {
 					// Bake configuration into the DI container.
-					$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir'],
-						$config['smalldb']['file_readers'] ?? [],
-						$config['smalldb']['machine_global_config'] ?? []);
+					$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir']);
 					$backend_config_reader->detectConfiguration();
 					$backend_config = $backend_config_reader->loadConfiguration();
-					$backend->addMethodCall('registerAllMachineTypes', [$backend_config]);
+					$container->setParameter('smalldb.generated_config', $backend_config);
+					$container->setParameter('smalldb.generated_reference_class_map', ReferenceValueResolver::buildReferenceClassMapFromConfig($backend_config));
+					$backend->addMethodCall('registerAllMachineTypes', [new Parameter('smalldb.generated_config')]);
+					$refResolver->addMethodCall('setReferenceClassMap', [new Parameter('smalldb.generated_reference_class_map')]);
 				}
 			}
 
