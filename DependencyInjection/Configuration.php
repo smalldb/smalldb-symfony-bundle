@@ -41,7 +41,7 @@ class Configuration implements ConfigurationInterface
 					->children()
 						->scalarNode('base_dir')
 							->info('Path to state machine definitions in JSON files (see JsonDirReader).')
-							->defaultValue('%kernel.project_dir%/statemachines')
+							->defaultValue('%kernel.project_dir%/config/statemachines')
 							->cannotBeEmpty()
 							->isRequired()
 						->end()
