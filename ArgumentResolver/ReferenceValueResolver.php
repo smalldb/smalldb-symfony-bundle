@@ -79,7 +79,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 					continue;
 				}
 				$referenceClassName = $machine->getReferenceClassName();
-				if ($referenceClassName !== Reference::class) {
+				if ($referenceClassName && $referenceClassName !== Reference::class) {
 					if (isset($referenceClassMap[$referenceClassName])) {
 						throw new \RuntimeException("Reference class $referenceClassName used by multiple machines.");
 					} else {
