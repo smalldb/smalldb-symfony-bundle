@@ -18,6 +18,7 @@
 
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
+use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
 use Smalldb\Flupdo\FlupdoWrapper;
 use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
 use Smalldb\SmalldbBundle\Controller\ProfilerController;
@@ -39,10 +40,13 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 
-class SmalldbExtension extends Extension implements CompilerPassInterface
+class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterface
 {
 	public function load(array $configs, ContainerBuilder $container)
 	{
+		parent::load($configs, $container);
+
+/*
 		// Get configuration
 		$configuration = new Configuration();
 		$config = $this->processConfiguration($configuration, $configs);
@@ -152,6 +156,7 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 					'priority' => 270,
 				]);
 		}
+*/
 	}
 
 
@@ -162,10 +167,12 @@ class SmalldbExtension extends Extension implements CompilerPassInterface
 		}
 		$smalldb_definition = $container->findDefinition(Smalldb::class);
 
+/*
 		$tagged_services = $container->findTaggedServiceIds('smalldb.backend');
 		foreach ($tagged_services as $id => $tags) {
 			$smalldb_definition->addMethodCall('registerBackend', array(new Reference($id)));
 		}
+*/
 	}
 
 }
