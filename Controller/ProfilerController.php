@@ -20,13 +20,17 @@
 namespace Smalldb\SmalldbBundle\Controller;
 
 
-use App\StateMachine\ProductMachine;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
+use Smalldb\StateMachine\Definition\Renderer\StateMachineExporter;
 use Smalldb\StateMachine\Smalldb;
+use Symfony\Component\Debug\Debug;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Profiler\Profiler;
 
 
 class ProfilerController implements ContainerAwareInterface
@@ -36,44 +40,32 @@ class ProfilerController implements ContainerAwareInterface
 
 	public function overviewAction(string $token)
 	{
-		$smalldb = $this->container->get('smalldb');
-
-		$annotations = [];
-
-		$reflectionClass = new \ReflectionClass(ProductMachine::class);
-		$annotations['_file_'] = [$reflectionClass->getFileName()];
-		$annotations['_dir_'] = [dirname($reflectionClass->getFileName())];
-		$reader = new AnnotationReader();
-		$annotations['_'] = $reader->getClassAnnotations($reflectionClass);
-		
-		foreach ($reflectionClass->getMethods() as $reflectionMethod) {
-			$annotations[$reflectionMethod->getName()] = $reader->getMethodAnnotations($reflectionMethod);
-		}
-
-		if (method_exists($reader, 'getConstantAnnotations')) {
-			foreach ($reflectionClass->getReflectionConstants() as $reflectionConstant) {
-				$annotations[$reflectionConstant->getName()] = $reader->getConstantAnnotations($reflectionConstant);
-			}
-		}
-
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/overview.html.twig', array(
-			'annotations' => $annotations,
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}
 
-	public function machineAction(string $token, string $machine_type = null)
+	public function machineAction(string $token, Request $request)
 	{
-		$smalldb = $this->container->get('smalldb');
+		$machineType = $request->attributes->get('machine');
 
-		$machine = $smalldb->getMachine($machine_type);
-		$statechart = $machine->exportJson(true);
+		/** @var Profiler $profiler */
+		$profiler = $this->container->get('profiler');
+		$profile = $profiler->loadProfile($token);
+		/** @var SmalldbDataCollector $collector */
+		$collector = $profile->getCollector('smalldb');
+
+		$definition = $collector->getDefinition($machineType);
+
+		$exporter = new StateMachineExporter($definition);
 
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/machine.html.twig', array(
 			'token' => $token,
-			'machine_type' => $machine_type,
-			'machine' => $machine,
-			'statechart' => $statechart,
+			'panel' => $request->attributes->get('panel'),
+			'machineType' => $machineType,
+			'collector' => $collector,
+			'definition' => $definition,
+			'stateChartExporter' => $exporter,
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}

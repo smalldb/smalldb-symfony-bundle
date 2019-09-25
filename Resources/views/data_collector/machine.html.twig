@@ -1,20 +1,60 @@
-<h2>Smalldb machine: <b>{{ machine_type }}</b></h2>
+<form action="" method="get">
+	<h2>
+		{% set curType = machineType %}
+		Smalldb State Machine:
+		<input type="hidden" name="panel" value="{{ panel }}">
+		<input type="hidden" name="page" value="machine">
+		<label>
+			<select name="machine" onchange="this.form.submit()" class="card" style="margin: 0;">
+				{% for d in collector.getDefinitions() -%}
+					{%- set type = d.getMachineType() -%}
+					<option{{ type == curType ? " selected" }} value="{{ type }}" class="font-normal">{{ type }}</option>
+				{%- endfor %}
+			</select>
+			<input type="submit" value="»" id="heading-hidden-submit">
+			<script type="text/javascript">
+				document.getElementById('heading-hidden-submit').style.display = 'none';
+			</script>
+		</label>
+	</h2>
+</form>
 
-<div class="card" style="padding: 3em; overflow: auto;">
-	<svg id="smalldb_diagram"
-			data-graph='{{ statechart|json_encode(constant('JSON_HEX_APOS')+constant('JSON_HEX_AMP'))|raw }}'
-			style="margin: auto; display: block; overflow: visible;"
-		></svg>
+<div class="metrics">
+
+	<div class="metric">
+		<span class="value">{{definition.states | length}}</span>
+		<span class="label">States</span>
+	</div>
+
+	<div class="metric">
+		<span class="value">{{definition.transitions | length}}</span>
+		<span class="label">Transitions</span>
+	</div>
+
+	<div class="metric">
+		<span class="value">{{definition.properties | length}}</span>
+		<span class="label">Properties</span>
+	</div>
+
+	<div class="metric">
+		<span class="value {{ definition.errors is empty ? "text-muted" : "text-danger"}}">
+			{{definition.errors | length}}
+		</span>
+		<span class="label">Errors</span>
+	</div>
+
 </div>
 
-<h3>State machine properties:</h3>
-{{ dump(machine.describeAllMachineProperties()) }}
+<div class="card" style="padding: 3em; overflow: auto;">
+	{{stateChartExporter.exportSvgElement({
+		id: "smalldb_diagram",
+		class: "grafovatko",
+		style: "margin: auto; display: block; overflow: visible;"
+	})|raw}}
+</div>
 
-<h3>State machine views:</h3>
-{{ dump(machine.describeAllMachineViews()) }}
-
-<h3>State machine references:</h3>
-{{ dump(machine.describeAllMachineReferences()) }}
+<h3>State machine definition:</h3>
+{{ dump(definition) }}
 
 {# FIXME: Link to JS file rather than inline it. #}
 <!-- <script type="text/javascript" src="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'grafovatko' }) }}"></script> -->

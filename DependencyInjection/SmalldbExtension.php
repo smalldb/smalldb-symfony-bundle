@@ -51,7 +51,11 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 
 	public function load(array $configs, ContainerBuilder $container)
 	{
-		parent::load($configs, $container);
+		$config = parent::load($configs, $container);
+		if ($config === null) {
+			// Stop if configuration is missing.
+			return null;
+		}
 
 /*
 		// Get configuration
@@ -145,25 +149,27 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 			}
 			$container->setAlias('flupdo', IFlupdo::class)->setPublic(true);
 		}
+*/
 
 		// Developper tools
-		if ($config['debug']) {
+	//	if (!empty($config['debug'])) {
 			// Register debugger
-			$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
+			//$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
 
 			// Data logger
-			$container->register(DebugLogger::class);
+			//$container->register(DebugLogger::class);
 
 			// Web Profiler page
 			$container->autowire(SmalldbDataCollector::class)
-				->setArguments([new Reference(Smalldb::class), new Reference(DebugLogger::class)])
+				->setArguments([new Reference(Smalldb::class)/*, new Reference(DebugLogger::class)*/])
 				->addTag('data_collector', [
 					'template' => '@Smalldb/data_collector/template.html.twig',
 					'id'       => 'smalldb',
 					'priority' => 270,
 				]);
-		}
-*/
+	//	}
+
+		return $config;
 	}
 
 
@@ -173,13 +179,6 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 			return;
 		}
 		$smalldb_definition = $container->findDefinition(Smalldb::class);
-
-/*
-		$tagged_services = $container->findTaggedServiceIds('smalldb.backend');
-		foreach ($tagged_services as $id => $tags) {
-			$smalldb_definition->addMethodCall('registerBackend', array(new Reference($id)));
-		}
-*/
 	}
 
 }

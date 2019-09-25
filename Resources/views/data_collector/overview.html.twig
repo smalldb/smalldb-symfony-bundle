@@ -1,15 +1,2 @@
 <h2>Smalldb overview</h2>
 
-<h3>State machine annotations:</h3>
-<ul>
-{% for label, feature in annotations %}
-	<li>
-		<b>{{ label }}:</b>
-		<ul>
-		{% for annotation in feature %}
-			<li>{{ dump(annotation) }}</li>
-		{% endfor %}
-		</ul>
-	</li>
-{% endfor %}
-</ul>

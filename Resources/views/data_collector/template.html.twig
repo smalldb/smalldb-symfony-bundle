@@ -1,53 +1,54 @@
 {% extends '@WebProfiler/Profiler/layout.html.twig' %}
 
-
 {% block toolbar %}
-	{% set icon %}
-		{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}
-		<div class="sf-toolbar-value">
-			<span>{{collector.logger.references_created_count}}</span>  <span class="sf-toolbar-label">ref.</span>
-			<span>{{collector.logger.listings_created_count}}</span>    <span class="sf-toolbar-label">ls.</span>
-			<span>{{collector.logger.transitions_invoked_count}}</span> <span class="sf-toolbar-label">tr.</span>
-		</div>
-	{% endset %}
+	{% if collector.definitions is not empty %}
+		{% set icon %}
+			{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}
+			<div class="sf-toolbar-value">
+				<span>{{collector.definitions | length}}</span>  <span class="sf-toolbar-label">s.m.</span>
+				{#
+				<span>{{collector.logger.listings_created_count}}</span>    <span class="sf-toolbar-label">ls.</span>
+				<span>{{collector.logger.transitions_invoked_count}}</span> <span class="sf-toolbar-label">tr.</span>
+				#}
+			</div>
+		{% endset %}
 
-	{% set text %}
-		<div class="sf-toolbar-info-piece">
-			<b>Smalldb </b>
-		</div>
-		<hr>
-		<div class="sf-toolbar-info-piece">
-			<b>Backends registered:</b>
-			<span class="sf-toolbar-status">{{collector.backends | length}}</span>
-		</div>
+		{% set text %}
+			<div class="sf-toolbar-info-piece">
+				<b>Smalldb </b>
+			</div>
+			<hr>
 
-		<div class="sf-toolbar-info-piece">
-			<b>Machines defined:</b>
-			<span class="sf-toolbar-status">{{collector.logger.machines_defined_count}}</span>
-		</div>
+			<div class="sf-toolbar-info-piece">
+				<b>Machines defined:</b>
+				<span class="sf-toolbar-status">{{collector.definitions | length}}</span>
+			</div>
 
-		<div class="sf-toolbar-info-piece">
-			<b>Machines created:</b>
-			<span class="sf-toolbar-status">{{collector.logger.machines_created_count}}</span>
-		</div>
+			{#
+			<div class="sf-toolbar-info-piece">
+				<b>Machines created:</b>
+				<span class="sf-toolbar-status">{{collector.logger.machines_created_count}}</span>
+			</div>
 
-		<div class="sf-toolbar-info-piece">
-			<b>References created:</b>
-			<span class="sf-toolbar-status">{{collector.logger.references_created_count}}</span>
-		</div>
+			<div class="sf-toolbar-info-piece">
+				<b>References created:</b>
+				<span class="sf-toolbar-status">{{collector.logger.references_created_count}}</span>
+			</div>
 
-		<div class="sf-toolbar-info-piece">
-			<b>Listings created:</b>
-			<span class="sf-toolbar-status">{{collector.logger.listings_created_count}}</span>
-		</div>
+			<div class="sf-toolbar-info-piece">
+				<b>Listings created:</b>
+				<span class="sf-toolbar-status">{{collector.logger.listings_created_count}}</span>
+			</div>
 
-		<div class="sf-toolbar-info-piece">
-			<b>Transitions invoked:</b>
-			<span class="sf-toolbar-status">{{collector.logger.transitions_invoked_count}}</span>
-		</div>
-	{% endset %}
+			<div class="sf-toolbar-info-piece">
+				<b>Transitions invoked:</b>
+				<span class="sf-toolbar-status">{{collector.logger.transitions_invoked_count}}</span>
+			</div>
+			#}
+		{% endset %}
 
-	{{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { 'link': true }) }}
+		{{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { 'link': true }) }}
+	{% endif %}
 {% endblock %}
 
 
@@ -57,7 +58,7 @@
 
 
 {% block menu %}
-	<span class="label">
+	<span class="label{{ collector.definitions is empty ? " disabled"}}">
 		<span class="icon">{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}</span>
 		<strong>Smalldb</strong>
 	</span>
@@ -65,25 +66,11 @@
 
 
 {% block panel %}
-	<h2>
-		<a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'overview' }) }}">
-			Smalldb
-		</a>
-	</h2>
-
-	{% if page == 'home' %}
-		{{  block('stats') }}
-
-		<h3>Registered Backends &amp; Defined State Machines</h3>
-	{% endif %}
-
-	{{ block('navigation') }}
-
 	{% if page == 'machine' %}
 		{{ render(controller('SmalldbBundle:Profiler:machine', {
 			token: token,
 			panel: panel,
-			machine_type: request.query.get('machine'),
+			machine: request.query.get('machine'),
 		})) }}
 	{% elseif page == 'overview' %}
 		{{ render(controller('SmalldbBundle:Profiler:overview', {
@@ -91,82 +78,56 @@
 			panel: panel,
 		})) }}
 	{% else %}
+		<h2>Smalldb</h2>
+		{{  block('stats') }}
+		{{ block('state_machine_list') }}
 		{{ block('activity_log') }}
 	{% endif %}
 {% endblock %}
 
 
 {% block stats %}
-
 	<div class="metrics">
+
 		<div class="metric">
-			<span class="value">{{collector.backends | length}}</span>
-			<span class="label">Backends registered</span>
+			<span class="value">{{collector.definitions | length}}</span>
+			<span class="label">State machines</span>
 		</div>
 
 		<div class="metric">
-			<span class="value">{{collector.logger.machines_defined_count}}</span>
-			<span class="label">State machines defined</span>
+			<span class="value">{{collector.log | length}}</span>
+			<span class="label">Events</span>
 		</div>
 
-		<div class="metric">
-			<span class="value">{{collector.logger.machines_created_count}}</span>
-			<span class="label">State machines created</span>
-		</div>
-
-		<div class="metric">
-			<span class="value">{{collector.logger.references_created_count}}</span>
-			<span class="label">References created</span>
-		</div>
-
-		<div class="metric">
-			<span class="value">{{collector.logger.listings_created_count}}</span>
-			<span class="label">Listings created</span>
-		</div>
-
-		<div class="metric">
-			<span class="value">{{collector.logger.transitions_invoked_count}}</span>
-			<span class="label">Transitions invoked</span>
-		</div>
 	</div>
-
 {% endblock %}
 
 
-{% block navigation %}
-
-	<div class="card">
-
-		{% if collector.backends is empty %}
-			<div class="empty">
-				<p>No backends registered.</p>
-			</div>
-		{% else %}
-			<dl>
-				{% for backend in collector.backends %}
-					<dt><b>{{backend.class}}:</b></dt>
-					<dd>
-						{% for type in backend.known_types -%}
-							{%- if page == "machine" and request.query.get('machine') == type -%}
-								<b class="status-warning"><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></b>
-							{%- else -%}
-								<span><a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'machine', machine: type }) }}">{{type}}</a></span>
-							{%- endif -%}
-							{%- if not loop.last -%}, {% endif %}
-						{%- endfor %}
-					</dd>
-				{% endfor %}
-			</dl>
-		{% endif %}
-	</div>
-
+{% block state_machine_list %}
+	<h3>Defined State Machines</h3>
+	{% if collector.getDefinitions() is empty %}
+		<div class="empty">
+			<p>No state machines defined.</p>
+		</div>
+	{% else %}
+		<div class="card">
+			{% for definition in collector.getDefinitions() -%}
+				{%- set type = definition.getMachineType() -%}
+				{%- if page == "machine" and request.query.get('machine') == type -%}
+					<b class="status-warning"><a href="{{ path('_profiler', { panel: panel, token: token, page: 'machine', machine: type }) }}">{{type}}</a></b>
+				{%- else -%}
+					<span><a href="{{ path('_profiler', { panel: panel, token: token, page: 'machine', machine: type }) }}">{{type}}</a></span>
+				{%- endif -%}
+				{%- if not loop.last -%}, {% endif %}
+			{%- endfor %}
+		</div>
+	{% endif %}
 {% endblock %}
 
 
 {% block activity_log %}
-
 	<h3>Activity Log</h3>
-	{% if collector.logger.log is empty %}
+	{% if collector.getLog() is empty %}
 	<div class="empty">
 		<p>Nothing happened in Smalldb.</p>
 	</div>
@@ -189,7 +150,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		{% for i, e in collector.logger.log %}
+		{% for i, e in collector.log %}
 		<tr>
 			<td nowrap class="text-muted">{{i}}</td>
 			<td nowrap>
@@ -280,7 +241,6 @@
 				{{dump(e)}}
 			</td>
 			{% endif %}
-			</td>
 			<td class="text-right text-muted" nowrap>
 				{% if e.class is defined %}
 				{{e.class | abbr_class}}

@@ -18,45 +18,56 @@
 
 namespace Smalldb\SmalldbBundle\DataCollector;
 
-use Symfony\Component\HttpKernel\DataCollector\DataCollector;
+use Smalldb\StateMachine\Definition\StateMachineDefinition;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Smalldb\StateMachine\Smalldb;
+use Symfony\Component\HttpKernel\DataCollector\DataCollectorInterface;
 
 
-class SmalldbDataCollector extends DataCollector
+class SmalldbDataCollector implements DataCollectorInterface
 {
-	protected $smalldb;
+	/** @var Smalldb */
+	private $smalldb;
 
-	protected $references_created_count = 0;
+	/** @var string[] */
+	private $machineTypes;
 
-	public function __construct(Smalldb $smalldb, DebugLogger $debug_logger)
+	/** @var StateMachineDefinition[] */
+	private $definitions;
+
+	private $references_created_count = 0;
+
+
+	public function __construct(Smalldb $smalldb)
 	{
+		$this->reset();
 		$this->smalldb = $smalldb;
-		$this->debug_logger = $debug_logger;
+	}
+
+
+	public function __sleep()
+	{
+		$propertyBlacklist = ['smalldb'];
+		return array_diff(array_keys(get_object_vars($this)), $propertyBlacklist);
 	}
 
 
 	public function collect(Request $request, Response $response, \Exception $exception = null)
 	{
-		$backends = [];
-		foreach ($this->smalldb->getBackends() as $backend) {
-			$backends[] = [
-				'class' => get_class($backend),
-				'known_types' => $backend->getKnownTypes(),
-			];
+		$this->machineTypes = $this->smalldb->getMachineTypes();
+		$this->definitions = [];
+		foreach ($this->machineTypes as $machineType) {
+			$this->definitions[$machineType] = $this->smalldb->getDefinition($machineType);
 		}
-
-		$this->data = [
-			'backends' => $backends,
-			'logger' => $this->debug_logger,
-		];
 	}
 
 
 	public function reset()
 	{
+		$this->machineTypes = [];
+		$this->definitions = [];
 		$this->references_created_count = 0;
 	}
 
@@ -67,15 +78,33 @@ class SmalldbDataCollector extends DataCollector
 	}
 
 
-	public function __get($key)
+	/**
+	 * @return string[]
+	 */
+	public function getMachineTypes(): array
 	{
-		return $this->data[$key];
+		return $this->machineTypes;
 	}
 
 
-	public function __isset($key)
+	/**
+	 * @return StateMachineDefinition[]
+	 */
+	public function getDefinitions(): array
 	{
-		return isset($this->data[$key]);
+		return $this->definitions;
+	}
+
+
+	public function getDefinition(string $machineType): StateMachineDefinition
+	{
+		return $this->definitions[$machineType];
+	}
+
+
+	public function getLog(): array
+	{
+		return [];
 	}
 
 }

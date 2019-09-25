@@ -10,6 +10,15 @@
             "email": "josef@kufner.cz"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:jkufner/annotations.git"
+        }, {
+            "type": "composer",
+            "url": "https://akvarko.frozen-doe.net/composer/"
+        }
+    ],
     "extra": {
         "branch-alias": {
             "dev-master": "0.2-dev"
@@ -24,7 +33,8 @@
         "symfony/http-kernel": "^4.2"
     },
     "require-dev": {
-        "smalldb/doc-tools": "dev-master"
+        "smalldb/doc-tools": "dev-master",
+        "doctrine/annotations": "dev-constants as 1.7"
     },
     "autoload": {
         "psr-4": {
