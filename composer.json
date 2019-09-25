@@ -10,10 +10,14 @@
             "email": "josef@kufner.cz"
         }
     ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.2-dev"
+        }
+    },
     "require": {
         "php": ">=7.3",
-        "smalldb/libsmalldb": "dev-master",
-        "smalldb/flupdo": "*",
+        "smalldb/libsmalldb": "^0.9-dev",
         "symfony/config": "^4.2",
         "symfony/dependency-injection": "^4.2",
         "symfony/expression-language": "^4.2",

@@ -19,23 +19,18 @@
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
 use Smalldb\StateMachine\SymfonyDI\Configuration as SmalldbConfiguration;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 
 class Configuration extends SmalldbConfiguration implements ConfigurationInterface
 {
-	public function getConfigTreeBuilder()
+	protected function addNodes(NodeBuilder $children)
 	{
-		$treeBuilder = parent::getConfigTreeBuilder();
-		$treeBuilder->getRootNode()
-			->children()
-				->booleanNode('debug')
-					->info('Enable Smalldb debugging')
-					->defaultValue('%kernel.debug%')
-					->treatNullLike('%kernel.debug%')
-				->end()
-			->end();
-		return $treeBuilder;
+		$children->booleanNode('debug')
+			->info('Enable Smalldb debugging')
+			->defaultValue('%kernel.debug%')
+			->treatNullLike('%kernel.debug%');
 	}
 }
 
