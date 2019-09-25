@@ -65,7 +65,11 @@
 
 
 {% block panel %}
-	<h2>Smalldb</h2>
+	<h2>
+		<a href="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'overview' }) }}">
+			Smalldb
+		</a>
+	</h2>
 
 	{% if page == 'home' %}
 		{{  block('stats') }}
@@ -80,6 +84,11 @@
 			token: token,
 			panel: panel,
 			machine_type: request.query.get('machine'),
+		})) }}
+	{% elseif page == 'overview' %}
+		{{ render(controller('SmalldbBundle:Profiler:overview', {
+			token: token,
+			panel: panel,
 		})) }}
 	{% else %}
 		{{ block('activity_log') }}
@@ -117,7 +126,7 @@
 
 		<div class="metric">
 			<span class="value">{{collector.logger.transitions_invoked_count}}</span>
-			<span class="label">Transitions invoked</b>
+			<span class="label">Transitions invoked</span>
 		</div>
 	</div>
 

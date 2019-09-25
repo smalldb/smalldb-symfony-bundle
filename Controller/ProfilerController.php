@@ -20,6 +20,8 @@
 namespace Smalldb\SmalldbBundle\Controller;
 
 
+use App\StateMachine\ProductMachine;
+use Doctrine\Common\Annotations\AnnotationReader;
 use Smalldb\StateMachine\Smalldb;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
@@ -31,6 +33,34 @@ class ProfilerController implements ContainerAwareInterface
 {
 	use ContainerAwareTrait;
 
+
+	public function overviewAction(string $token)
+	{
+		$smalldb = $this->container->get('smalldb');
+
+		$annotations = [];
+
+		$reflectionClass = new \ReflectionClass(ProductMachine::class);
+		$annotations['_file_'] = [$reflectionClass->getFileName()];
+		$annotations['_dir_'] = [dirname($reflectionClass->getFileName())];
+		$reader = new AnnotationReader();
+		$annotations['_'] = $reader->getClassAnnotations($reflectionClass);
+		
+		foreach ($reflectionClass->getMethods() as $reflectionMethod) {
+			$annotations[$reflectionMethod->getName()] = $reader->getMethodAnnotations($reflectionMethod);
+		}
+
+		if (method_exists($reader, 'getConstantAnnotations')) {
+			foreach ($reflectionClass->getReflectionConstants() as $reflectionConstant) {
+				$annotations[$reflectionConstant->getName()] = $reader->getConstantAnnotations($reflectionConstant);
+			}
+		}
+
+		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/overview.html.twig', array(
+			'annotations' => $annotations,
+			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
+		)));
+	}
 
 	public function machineAction(string $token, string $machine_type = null)
 	{
