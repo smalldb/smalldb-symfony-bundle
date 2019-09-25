@@ -53,9 +53,6 @@
 	})|raw}}
 </div>
 
-<h3>State machine definition:</h3>
-{{ dump(definition) }}
-
 {# FIXME: Link to JS file rather than inline it. #}
 <!-- <script type="text/javascript" src="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'grafovatko' }) }}"></script> -->
 <script type="text/javascript">
@@ -68,4 +65,7 @@
 	new G.GraphView('svg#smalldb_diagram');
 </script>
 
+
+<h3>State machine definition:</h3>
+{{ dump(definition) }}
 
