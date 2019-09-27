@@ -82,7 +82,7 @@ class ProfilerController implements ContainerAwareInterface
 				if ($svgFileName && file_exists($svgFileName)) {
 					$svgContent = file_get_contents($svgFileName);
 					$svgPainter = new SvgPainter();
-					$colorizedSvgContent = $svgPainter->colorizeSvgFile($svgContent, $bpmnGraph, [], '');
+					$colorizedSvgContent = $svgPainter->colorizeSvgFile($svgContent, $bpmnGraph, $diagramInfo->getTargetParticipant(), [], md5($svgFileName));
 					$sourceDiagrams[] = [
 						"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as colorized SVG)",
 						"svg" => $colorizedSvgContent,
@@ -90,7 +90,8 @@ class ProfilerController implements ContainerAwareInterface
 				}
 
 				$renderer = new GrafovatkoExporter($bpmnGraph);
-				$renderer->addProcessor(new GrafovatkoProcessor());
+				$renderer->setPrefix(md5($diagramInfo->getBpmnFileName()));
+				$renderer->addProcessor(new GrafovatkoProcessor($diagramInfo->getTargetParticipant()));
 				$sourceDiagrams[] = [
 					"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as interpreted)",
 					"svg" => $renderer->exportSvgElement($grafovatkoAttrs),
