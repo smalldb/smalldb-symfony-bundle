@@ -45,13 +45,36 @@
 
 </div>
 
+{% if definition.errors is not empty %}
+<h3 class="text-danger">Errors</h3>
+<ul>
+	{% for error in definition.errors %}
+	<li class="text-danger">{{ error.getMessage() }}</li>
+	{% endfor %}
+</ul>
+{% endif %}
+
+<h3>State Diagram</h3>
+
 <div class="card" style="padding: 3em; overflow: auto;">
-	{{stateChartExporter.exportSvgElement({
-		id: "smalldb_diagram",
-		class: "grafovatko",
-		style: "margin: auto; display: block; overflow: visible;"
-	})|raw}}
+	{{ stateChart | raw }}
 </div>
+
+{% if sourceDiagrams is not empty %}
+<h3>Source Diagrams</h3>
+<div class="sf-tabs">
+{% for diagram in sourceDiagrams %}
+	<div class="tab ">
+		<h4 class="tab-title">{{ diagram.heading }}</h4>
+		<div class="tab-content">
+			<div class="card" style="padding: 3em; overflow: auto;">
+				{{ diagram.svg | raw }}
+			</div>
+		</div>
+	</div>
+{%  endfor %}
+</div>
+{% endif %}
 
 {# FIXME: Link to JS file rather than inline it. #}
 <!-- <script type="text/javascript" src="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'grafovatko' }) }}"></script> -->
@@ -62,7 +85,16 @@
 </script>
 
 <script type="text/javascript">
-	new G.GraphView('svg#smalldb_diagram');
+if (G) {
+	console.log('Grafovatko %s.', G.version);
+	const graphElements = document.getElementsByClassName('grafovatko');
+	window.grafovatkoView = [];
+	for (const el of graphElements) {
+		window.grafovatkoView.push(new G.GraphView(el));
+	}
+} else {
+	console.error("Grafovatko library is not loaded.");
+}
 </script>
 
 

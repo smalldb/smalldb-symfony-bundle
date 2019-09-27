@@ -22,7 +22,11 @@ namespace Smalldb\SmalldbBundle\Controller;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
+use Smalldb\StateMachine\BpmnExtension\Definition\BpmnExtension;
+use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor;
+use Smalldb\StateMachine\BpmnExtension\SvgPainter;
 use Smalldb\StateMachine\Definition\Renderer\StateMachineExporter;
+use Smalldb\StateMachine\Graph\Grafovatko\GrafovatkoExporter;
 use Smalldb\StateMachine\Smalldb;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
@@ -47,6 +51,11 @@ class ProfilerController implements ContainerAwareInterface
 
 	public function machineAction(string $token, Request $request)
 	{
+		$grafovatkoAttrs = [
+			"class" => "grafovatko",
+			"style" => "margin: auto; display: block; overflow: visible;"
+		];
+
 		$machineType = $request->attributes->get('machine');
 
 		/** @var Profiler $profiler */
@@ -58,6 +67,36 @@ class ProfilerController implements ContainerAwareInterface
 		$definition = $collector->getDefinition($machineType);
 
 		$exporter = new StateMachineExporter($definition);
+		$stateChart = $exporter->exportSvgElement($grafovatkoAttrs);
+
+		$sourceDiagrams = [];
+
+		if ($definition->hasExtension(BpmnExtension::class)) {
+			/** @var BpmnExtension $ext */
+			$ext = $definition->getExtension(BpmnExtension::class);
+			$diagramInfoList = $ext->getDiagramInfo();
+			foreach ($diagramInfoList as $diagramInfo) {
+				$bpmnGraph = $diagramInfo->getBpmnGraph();
+
+				$svgFileName = $diagramInfo->getSvgFileName();
+				if ($svgFileName && file_exists($svgFileName)) {
+					$svgContent = file_get_contents($svgFileName);
+					$svgPainter = new SvgPainter();
+					$colorizedSvgContent = $svgPainter->colorizeSvgFile($svgContent, $bpmnGraph, [], '');
+					$sourceDiagrams[] = [
+						"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as colorized SVG)",
+						"svg" => $colorizedSvgContent,
+					];
+				}
+
+				$renderer = new GrafovatkoExporter($bpmnGraph);
+				$renderer->addProcessor(new GrafovatkoProcessor());
+				$sourceDiagrams[] = [
+					"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as interpreted)",
+					"svg" => $renderer->exportSvgElement($grafovatkoAttrs),
+				];
+			}
+		}
 
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/machine.html.twig', array(
 			'token' => $token,
@@ -65,7 +104,8 @@ class ProfilerController implements ContainerAwareInterface
 			'machineType' => $machineType,
 			'collector' => $collector,
 			'definition' => $definition,
-			'stateChartExporter' => $exporter,
+			'stateChart' => $stateChart,
+			'sourceDiagrams' => $sourceDiagrams,
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}
