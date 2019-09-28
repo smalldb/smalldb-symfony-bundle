@@ -1,11 +1,11 @@
 {% extends '@WebProfiler/Profiler/layout.html.twig' %}
 
 {% block toolbar %}
-	{% if collector.definitions is not empty %}
+	{% if collector.machineTypes is not empty %}
 		{% set icon %}
 			{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}
 			<div class="sf-toolbar-value">
-				<span>{{collector.definitions | length}}</span>  <span class="sf-toolbar-label">s.m.</span>
+				<span>{{collector.machineTypes | length}}</span>  <span class="sf-toolbar-label">s.m.</span>
 				{#
 				<span>{{collector.logger.listings_created_count}}</span>    <span class="sf-toolbar-label">ls.</span>
 				<span>{{collector.logger.transitions_invoked_count}}</span> <span class="sf-toolbar-label">tr.</span>
@@ -21,7 +21,7 @@
 
 			<div class="sf-toolbar-info-piece">
 				<b>Machines defined:</b>
-				<span class="sf-toolbar-status">{{collector.definitions | length}}</span>
+				<span class="sf-toolbar-status">{{collector.machineTypes | length}}</span>
 			</div>
 
 			{#
@@ -105,14 +105,13 @@
 
 {% block state_machine_list %}
 	<h3>Defined State Machines</h3>
-	{% if collector.getDefinitions() is empty %}
+	{% if collector.machineTypes is empty %}
 		<div class="empty">
 			<p>No state machines defined.</p>
 		</div>
 	{% else %}
 		<div class="card">
-			{% for definition in collector.getDefinitions() -%}
-				{%- set type = definition.getMachineType() -%}
+			{% for type in collector.machineTypes -%}
 				{%- if page == "machine" and request.query.get('machine') == type -%}
 					<b class="status-warning"><a href="{{ path('_profiler', { panel: panel, token: token, page: 'machine', machine: type }) }}">{{type}}</a></b>
 				{%- else -%}

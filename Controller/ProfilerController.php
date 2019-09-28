@@ -65,7 +65,15 @@ class ProfilerController implements ContainerAwareInterface
 		/** @var SmalldbDataCollector $collector */
 		$collector = $profile->getCollector('smalldb');
 
-		$definition = $collector->getDefinition($machineType);
+		if ($collector->hasDefinitions()) {
+			$definition = $collector->getDefinition($machineType);
+			$machineTypes = array_keys($collector->getDefinitions());
+		} else {
+			/** @var Smalldb $smalldb */
+			$smalldb = $this->container->get(Smalldb::class);
+			$definition = $smalldb->getDefinition($machineType);
+			$machineTypes = $smalldb->getMachineTypes();
+		}
 
 		$exporter = new StateMachineExporter($definition);
 		$stateChart = $exporter->exportSvgElement($grafovatkoAttrs);
@@ -112,7 +120,7 @@ class ProfilerController implements ContainerAwareInterface
 			'token' => $token,
 			'panel' => $request->attributes->get('panel'),
 			'machineType' => $machineType,
-			'collector' => $collector,
+			'machineTypes' => $machineTypes,
 			'definition' => $definition,
 			'sourceFiles' => $sourceFiles,
 			'stateChart' => $stateChart,

@@ -6,8 +6,7 @@
 		<input type="hidden" name="page" value="machine">
 		<label>
 			<select name="machine" onchange="this.form.submit()" class="card" style="margin: 0;">
-				{% for d in collector.getDefinitions() -%}
-					{%- set type = d.getMachineType() -%}
+				{% for type in machineTypes -%}
 					<option{{ type == curType ? " selected" }} value="{{ type }}" class="font-normal">{{ type }}</option>
 				{%- endfor %}
 			</select>

@@ -28,6 +28,9 @@ use Symfony\Component\HttpKernel\DataCollector\DataCollectorInterface;
 
 class SmalldbDataCollector implements DataCollectorInterface
 {
+
+	private const DEFINITIONS_SNAPSHOT = false;
+
 	/** @var Smalldb */
 	private $smalldb;
 
@@ -54,12 +57,20 @@ class SmalldbDataCollector implements DataCollectorInterface
 	}
 
 
+	public function hasDefinitions(): bool
+	{
+		return !empty($this->definitions);
+	}
+
+
 	public function collect(Request $request, Response $response, \Exception $exception = null)
 	{
 		$this->machineTypes = $this->smalldb->getMachineTypes();
-		$this->definitions = [];
-		foreach ($this->machineTypes as $machineType) {
-			$this->definitions[$machineType] = $this->smalldb->getDefinition($machineType);
+		if (static::DEFINITIONS_SNAPSHOT) {
+			$this->definitions = [];
+			foreach ($this->machineTypes as $machineType) {
+				$this->definitions[$machineType] = $this->smalldb->getDefinition($machineType);
+			}
 		}
 	}
 
