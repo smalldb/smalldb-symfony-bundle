@@ -43,6 +43,13 @@
 		<span class="label">Errors</span>
 	</div>
 
+	<div class="metric">
+		<span class="value" style="font-size: 14px; height: 51px">
+				{{ mtime | date('Y-m-d')}}<br>
+				{{ mtime | date('H:i:s') }}
+		</span>
+		<span class="label">Last modified</span>
+	</div>
 </div>
 
 {% if definition.errors is not empty %}
@@ -59,6 +66,15 @@
 <div class="card" style="padding: 3em; overflow: auto;">
 	{{ stateChart | raw }}
 </div>
+
+{% if sourceFiles is not empty %}
+	<h3>Source Files</h3>
+	<ul>
+		{% for sourceFile in sourceFiles %}
+			<li><code>{{ sourceFile.getFilename() }}</code></li>
+		{% endfor %}
+	</ul>
+{% endif %}
 
 {% if sourceDiagrams is not empty %}
 <h3>Source Diagrams</h3>

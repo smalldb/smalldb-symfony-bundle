@@ -28,6 +28,7 @@ use Smalldb\StateMachine\BpmnExtension\SvgPainter;
 use Smalldb\StateMachine\Definition\Renderer\StateMachineExporter;
 use Smalldb\StateMachine\Graph\Grafovatko\GrafovatkoExporter;
 use Smalldb\StateMachine\Smalldb;
+use Smalldb\StateMachine\SourcesExtension\Definition\SourcesExtension;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
@@ -99,14 +100,24 @@ class ProfilerController implements ContainerAwareInterface
 			}
 		}
 
+		if ($definition->hasExtension(SourcesExtension::class)) {
+			/** @var SourcesExtension $sourcesExt */
+			$sourcesExt = $definition->getExtension(SourcesExtension::class);
+			$sourceFiles = $sourcesExt->getSourceFiles();
+		} else {
+			$sourceFiles = null;
+		}
+
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/machine.html.twig', array(
 			'token' => $token,
 			'panel' => $request->attributes->get('panel'),
 			'machineType' => $machineType,
 			'collector' => $collector,
 			'definition' => $definition,
+			'sourceFiles' => $sourceFiles,
 			'stateChart' => $stateChart,
 			'sourceDiagrams' => $sourceDiagrams,
+			'mtime' => (new \DateTimeImmutable())->setTimestamp($definition->getMTime()),
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}
