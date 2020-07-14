@@ -12,9 +12,6 @@
     ],
     "repositories": [
         {
-            "type": "vcs",
-            "url": "git@github.com:jkufner/annotations.git"
-        }, {
             "type": "composer",
             "url": "https://akvarko.frozen-doe.net/composer/"
         }
@@ -25,16 +22,16 @@
         }
     },
     "require": {
-        "php": ">=7.3",
-        "smalldb/libsmalldb": "^0.9-dev",
-        "symfony/config": "^4.2",
-        "symfony/dependency-injection": "^4.2",
-        "symfony/expression-language": "^4.2",
-        "symfony/http-kernel": "^4.2"
+        "php": ">=7.4",
+        "smalldb/libsmalldb": "^2.0|dev-master",
+        "symfony/config": ">=4.2",
+        "symfony/dependency-injection": ">=4.2",
+        "symfony/expression-language": ">=4.2",
+        "symfony/http-kernel": ">=4.2"
     },
     "require-dev": {
         "smalldb/doc-tools": "dev-master",
-        "doctrine/annotations": "dev-constants as 1.7"
+        "smalldb/annotations": "dev-master"
     },
     "autoload": {
         "psr-4": {
