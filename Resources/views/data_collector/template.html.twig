@@ -67,13 +67,13 @@
 
 {% block panel %}
 	{% if page == 'machine' %}
-		{{ render(controller('SmalldbBundle:Profiler:machine', {
+		{{ render(controller('Smalldb\\SmalldbBundle\\Controller\\ProfilerController::machineAction', {
 			token: token,
 			panel: panel,
 			machine: request.query.get('machine'),
 		})) }}
 	{% elseif page == 'overview' %}
-		{{ render(controller('SmalldbBundle:Profiler:overview', {
+		{{ render(controller('Smalldb\\SmalldbBundle\\Controller\\ProfilerController::overviewAction', {
 			token: token,
 			panel: panel,
 		})) }}
