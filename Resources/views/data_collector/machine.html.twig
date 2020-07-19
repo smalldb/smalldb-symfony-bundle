@@ -50,6 +50,9 @@
 		<span class="label">Last modified</span>
 	</div>
 </div>
+{% if not definitionsSnapshot %}
+	<p class="help">Note: State machine definition is loaded from the current Smalldb configuration, which may differ from the configuration used when profiling this request.</p>
+{% endif %}
 
 {% if definition.errors is not empty %}
 <h3 class="text-danger">Errors</h3>

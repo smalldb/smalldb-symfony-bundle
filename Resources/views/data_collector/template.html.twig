@@ -43,7 +43,7 @@
 
 
 {% block menu %}
-	<span class="label{{ collector.definitions is empty ? " disabled"}}">
+	<span class="label{{ collector.referencesCreatedCount == 0 and collector.transitionsInvokedCount == 0 ? " disabled" }}">
 		<span class="icon">{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}</span>
 		<strong>Smalldb</strong>
 	</span>
@@ -64,7 +64,7 @@
 		})) }}
 	{% else %}
 		<h2>Smalldb</h2>
-		{{  block('stats') }}
+		{{ block('stats') }}
 		{{ block('state_machine_list') }}
 		{{ block('activity_log') }}
 	{% endif %}
@@ -75,7 +75,7 @@
 	<div class="metrics">
 
 		<div class="metric">
-			<span class="value">{{collector.definitions | length}}</span>
+			<span class="value">{{collector.machineTypes | length}}</span>
 			<span class="label">State machines</span>
 		</div>
 
@@ -118,7 +118,12 @@
 	<h3>Activity Log</h3>
 	{% if collector.getLog() is empty %}
 	<div class="empty">
-		<p>Nothing happened in Smalldb.</p>
+		{% if collector.referencesCreatedCount or collector.transitionsInvokedCount %}
+			{# TODO: Fix activity log #}
+			<p>Some activity detected, but the activity log is not implemented yet.</p>
+		{% else %}
+			<p>Nothing happened in Smalldb.</p>
+		{% endif %}
 	</div>
 	{% else %}
 	<table>

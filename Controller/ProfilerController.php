@@ -119,6 +119,7 @@ class ProfilerController implements ContainerAwareInterface
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/machine.html.twig', array(
 			'token' => $token,
 			'panel' => $request->attributes->get('panel'),
+			'definitionsSnapshot' => $collector->hasDefinitionsSnapshot(),
 			'machineType' => $machineType,
 			'machineTypes' => $machineTypes,
 			'definition' => $definition,

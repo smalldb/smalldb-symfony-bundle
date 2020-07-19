@@ -21,6 +21,7 @@ namespace Smalldb\SmalldbBundle\DataCollector;
 use Smalldb\StateMachine\DebugLoggerInterface;
 use Smalldb\StateMachine\Definition\StateMachineDefinition;
 use Smalldb\StateMachine\ReferenceInterface;
+use Smalldb\StateMachine\RuntimeException;
 use Smalldb\StateMachine\Transition\TransitionEvent;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,10 +34,10 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorInterface, DebugLoggerInterface
 {
-
-	private const DEFINITIONS_SNAPSHOT = true;
+	private const DEFINITIONS_SNAPSHOT = false;
 
 	private Smalldb $smalldb;
+	private Stopwatch $stopwatch;
 
 	/** @var string[] */
 	private array $machineTypes;
@@ -44,10 +45,9 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	/** @var StateMachineDefinition[] */
 	private array $definitions;
 
-	private int $referencesCreatedCount = 0;
-	private int $transitionsInvokedCount = 0;
-
-	private Stopwatch $stopwatch;
+	private bool $definitionsSnapshot;
+	private int $referencesCreatedCount;
+	private int $transitionsInvokedCount;
 
 
 	public function __construct(Smalldb $smalldb, Stopwatch $stopwatch)
@@ -65,16 +65,20 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	}
 
 
-	public function hasDefinitions(): bool
+	public function reset()
 	{
-		return !empty($this->definitions);
+		$this->machineTypes = [];
+		$this->definitions = [];
+		$this->definitionsSnapshot = static::DEFINITIONS_SNAPSHOT;
+		$this->referencesCreatedCount = 0;
+		$this->transitionsInvokedCount = 0;
 	}
 
 
 	public function collect(Request $request, Response $response, \Throwable $exception = null)
 	{
 		$this->machineTypes = $this->smalldb->getMachineTypes();
-		if (static::DEFINITIONS_SNAPSHOT) {
+		if ($this->definitionsSnapshot) {
 			$this->definitions = [];
 			foreach ($this->machineTypes as $machineType) {
 				$this->definitions[$machineType] = $this->smalldb->getDefinition($machineType);
@@ -88,17 +92,15 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	}
 
 
-	public function reset()
-	{
-		$this->machineTypes = [];
-		$this->definitions = [];
-		$this->referencesCreatedCount = 0;
-	}
-
-
 	public function getName()
 	{
 		return 'smalldb';
+	}
+
+
+	public function hasDefinitionsSnapshot(): bool
+	{
+		return $this->definitionsSnapshot;
 	}
 
 
@@ -108,6 +110,12 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	public function getMachineTypes(): array
 	{
 		return $this->machineTypes;
+	}
+
+
+	public function hasDefinitions(): bool
+	{
+		return !empty($this->definitions);
 	}
 
 
@@ -122,7 +130,11 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 
 	public function getDefinition(string $machineType): StateMachineDefinition
 	{
-		return $this->definitions[$machineType];
+		if (isset($this->definitions[$machineType])) {
+			return $this->definitions[$machineType];
+		} else {
+			throw new RuntimeException('State machine definition not found: ' . $machineType);
+		}
 	}
 
 
