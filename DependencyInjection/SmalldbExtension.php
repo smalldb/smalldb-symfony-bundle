@@ -64,7 +64,7 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 				->setPublic(true);
 
 			// Register debugger
-			//$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
+			$container->getDefinition(Smalldb::class)->addMethodCall('setDebugLogger', [new Reference('data_collector.smalldb')]);
 
 		}
 	}

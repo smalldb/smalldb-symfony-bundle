@@ -5,11 +5,8 @@
 		{% set icon %}
 			{{include('@Smalldb/data_collector/crud-icon.grey.svg')}}
 			<div class="sf-toolbar-value">
-				<span>{{collector.machineTypes | length}}</span>  <span class="sf-toolbar-label">s.m.</span>
-				{#
-				<span>{{collector.logger.listings_created_count}}</span>    <span class="sf-toolbar-label">ls.</span>
-				<span>{{collector.logger.transitions_invoked_count}}</span> <span class="sf-toolbar-label">tr.</span>
-				#}
+				<span>{{collector.referencesCreatedCount}}</span> <span class="sf-toolbar-label">ref.</span>
+				<span>{{collector.transitionsInvokedCount}}</span> <span class="sf-toolbar-label">tr.</span>
 			</div>
 		{% endset %}
 
@@ -24,27 +21,15 @@
 				<span class="sf-toolbar-status">{{collector.machineTypes | length}}</span>
 			</div>
 
-			{#
-			<div class="sf-toolbar-info-piece">
-				<b>Machines created:</b>
-				<span class="sf-toolbar-status">{{collector.logger.machines_created_count}}</span>
-			</div>
-
 			<div class="sf-toolbar-info-piece">
 				<b>References created:</b>
-				<span class="sf-toolbar-status">{{collector.logger.references_created_count}}</span>
-			</div>
-
-			<div class="sf-toolbar-info-piece">
-				<b>Listings created:</b>
-				<span class="sf-toolbar-status">{{collector.logger.listings_created_count}}</span>
+				<span class="sf-toolbar-status">{{collector.referencesCreatedCount}}</span>
 			</div>
 
 			<div class="sf-toolbar-info-piece">
 				<b>Transitions invoked:</b>
-				<span class="sf-toolbar-status">{{collector.logger.transitions_invoked_count}}</span>
+				<span class="sf-toolbar-status">{{collector.transitionsInvokedCount}}</span>
 			</div>
-			#}
 		{% endset %}
 
 		{{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { 'link': true }) }}
@@ -95,8 +80,13 @@
 		</div>
 
 		<div class="metric">
-			<span class="value">{{collector.log | length}}</span>
-			<span class="label">Events</span>
+			<span class="value">{{collector.referencesCreatedCount}}</span>
+			<span class="label">References created</span>
+		</div>
+
+		<div class="metric">
+			<span class="value">{{collector.transitionsInvokedCount}}</span>
+			<span class="label">Transitions invoked</span>
 		</div>
 
 	</div>

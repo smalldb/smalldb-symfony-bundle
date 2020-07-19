@@ -18,16 +18,20 @@
 
 namespace Smalldb\SmalldbBundle\DataCollector;
 
+use Smalldb\StateMachine\DebugLoggerInterface;
 use Smalldb\StateMachine\Definition\StateMachineDefinition;
+use Smalldb\StateMachine\ReferenceInterface;
+use Smalldb\StateMachine\Transition\TransitionEvent;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Smalldb\StateMachine\Smalldb;
 use Symfony\Component\HttpKernel\DataCollector\DataCollectorInterface;
 use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 
-class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorInterface
+class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorInterface, DebugLoggerInterface
 {
 
 	private const DEFINITIONS_SNAPSHOT = true;
@@ -40,13 +44,17 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	/** @var StateMachineDefinition[] */
 	private array $definitions;
 
-	private int $references_created_count = 0;
+	private int $referencesCreatedCount = 0;
+	private int $transitionsInvokedCount = 0;
+
+	private Stopwatch $stopwatch;
 
 
-	public function __construct(Smalldb $smalldb)
+	public function __construct(Smalldb $smalldb, Stopwatch $stopwatch)
 	{
 		$this->reset();
 		$this->smalldb = $smalldb;
+		$this->stopwatch = $stopwatch;
 	}
 
 
@@ -84,7 +92,7 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	{
 		$this->machineTypes = [];
 		$this->definitions = [];
-		$this->references_created_count = 0;
+		$this->referencesCreatedCount = 0;
 	}
 
 
@@ -121,6 +129,40 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	public function getLog(): array
 	{
 		return [];
+	}
+
+
+	public function logReferenceCreated(ReferenceInterface $ref)
+	{
+		$this->referencesCreatedCount++;
+		$this->stopwatch->start('reference created: ' . $ref->getMachineType(), 'smalldb')->stop();
+	}
+
+
+	public function logTransitionInvoked(TransitionEvent $transitionEvent): ?array
+	{
+		$this->transitionsInvokedCount++;
+		$stopwatchEvent = $this->stopwatch->start('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName());
+		return [$stopwatchEvent];
+	}
+
+
+	public function logTransitionCompleted(TransitionEvent $transitionEvent, ?array $invokeContext)
+	{
+		[$stopwatchEvent] = $invokeContext;
+		$stopwatchEvent->stop('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName());
+	}
+
+
+	public function getReferencesCreatedCount(): int
+	{
+		return $this->referencesCreatedCount;
+	}
+
+
+	public function getTransitionsInvokedCount(): int
+	{
+		return $this->transitionsInvokedCount;
 	}
 
 }
