@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2017, Josef Kufner  <josef@kufner.cz>
+ * Copyright (c) 2017-2020, Josef Kufner  <josef@kufner.cz>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 use Smalldb\StateMachine\Smalldb;
 use Symfony\Component\HttpKernel\DataCollector\DataCollectorInterface;
+use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
 
 
-class SmalldbDataCollector implements DataCollectorInterface
+class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorInterface
 {
 
-	private const DEFINITIONS_SNAPSHOT = false;
+	private const DEFINITIONS_SNAPSHOT = true;
 
-	/** @var Smalldb */
-	private $smalldb;
+	private Smalldb $smalldb;
 
 	/** @var string[] */
-	private $machineTypes;
+	private array $machineTypes;
 
 	/** @var StateMachineDefinition[] */
-	private $definitions;
+	private array $definitions;
 
-	private $references_created_count = 0;
+	private int $references_created_count = 0;
 
 
 	public function __construct(Smalldb $smalldb)
@@ -63,7 +63,7 @@ class SmalldbDataCollector implements DataCollectorInterface
 	}
 
 
-	public function collect(Request $request, Response $response, \Exception $exception = null)
+	public function collect(Request $request, Response $response, \Throwable $exception = null)
 	{
 		$this->machineTypes = $this->smalldb->getMachineTypes();
 		if (static::DEFINITIONS_SNAPSHOT) {
@@ -72,6 +72,11 @@ class SmalldbDataCollector implements DataCollectorInterface
 				$this->definitions[$machineType] = $this->smalldb->getDefinition($machineType);
 			}
 		}
+	}
+
+
+	public function lateCollect()
+	{
 	}
 
 

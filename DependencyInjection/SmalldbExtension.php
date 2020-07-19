@@ -18,23 +18,15 @@
 
 namespace Smalldb\SmalldbBundle\DependencyInjection;
 
-use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
-use Smalldb\Flupdo\FlupdoWrapper;
 use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
 use Smalldb\SmalldbBundle\Controller\ProfilerController;
+use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
+use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
-use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
-use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
-use Smalldb\StateMachine\JsonDirBackend;
-use Smalldb\StateMachine\JsonDirReader;
-use Smalldb\StateMachine\SimpleBackend;
 use Smalldb\StateMachine\Smalldb;
-use Smalldb\Flupdo\Flupdo;
-use Smalldb\Flupdo\IFlupdo;
-
+use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
 use Symfony\Component\DependencyInjection\Parameter;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -51,23 +43,36 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 
 	public function load(array $configs, ContainerBuilder $container)
 	{
-		$config = parent::load($configs, $container);
-		if ($config === null) {
-			// Stop if configuration is missing.
-			return null;
+		parent::load($configs, $container);
+
+		// Developper tools
+		if (!empty($this->config['debug'])) {
+			// Data logger
+			//$container->register(DebugLogger::class);
+
+			// Web Profiler page
+			$container->autowire('data_collector.smalldb', SmalldbDataCollector::class)
+				//->setArguments([new Reference(Smalldb::class), new Reference(DebugLogger::class)])
+				->setArguments([new Reference(Smalldb::class)])
+				->addTag('data_collector', [
+					'template' => '@Smalldb/data_collector/template.html.twig',
+					'id' => 'smalldb',
+					'priority' => 270,
+				]);
+
+			$container->autowire(ProfilerController::class, ProfilerController::class)
+				->setPublic(true);
+
+			// Register debugger
+			//$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
+
 		}
+	}
 
 /*
-		// Get configuration
-		$configuration = new Configuration();
-		$config = $this->processConfiguration($configuration, $configs);
-
-		// Create Smalldb entry point
-		$smalldb_definition = $container->autowire(Smalldb::class)
-			->setShared(true)
-			->setPublic(true);
-		$container->setAlias('smalldb', Smalldb::class)
-			->setPublic(true);
+	public function load(array $configs, ContainerBuilder $container)
+	{
+		// ...
 
 		// Reference resolver
 		$refResolver = $container->autowire(ReferenceValueResolver::class)
@@ -129,56 +134,16 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 				->setShared(false);
 		}
 
-		// Database connection & query builder
-		if (!empty($config['flupdo'])) {
-			if (!empty($config['flupdo']['wrapper_class'])) {
-				$wrapper = $container->autowire(IFlupdo::class)
-					->setClass($config['flupdo']['wrapper_class'])
-					->setShared(true);
-				if ($config['flupdo']['wrapped_service']) {
-					$wrapper->setArguments([new Reference($config['flupdo']['wrapped_service'])]);
-				}
-				$container->setAlias(FlupdoWrapper::class, IFlupdo::class);
-			} else if (!empty($config['flupdo']['driver']) || !empty($config['flupdo']['dsn'])) {
-				$container->autowire(IFlupdo::class)
-					->setFactory([Flupdo::class, 'createInstanceFromConfig'])
-					->setArguments([$config['flupdo']])
-					->setShared(true);
-				$container->setAlias(Flupdo::class, IFlupdo::class);
-				$container->setAlias(\PDO::class, IFlupdo::class);
-			}
-			$container->setAlias('flupdo', IFlupdo::class)->setPublic(true);
-		}
-*/
-
-		// Developper tools
-	//	if (!empty($config['debug'])) {
-			// Register debugger
-			//$smalldb_definition->addMethodCall('setDebugLogger', [new Reference(DebugLogger::class)]);
-
-			// Data logger
-			//$container->register(DebugLogger::class);
-
-			// Web Profiler page
-			$container->autowire(SmalldbDataCollector::class)
-				->setArguments([new Reference(Smalldb::class)/*, new Reference(DebugLogger::class)*/])
-				->addTag('data_collector', [
-					'template' => '@Smalldb/data_collector/template.html.twig',
-					'id'       => 'smalldb',
-					'priority' => 270,
-				]);
-	//	}
-
 		return $config;
 	}
+*/
 
 
 	public function process(ContainerBuilder $container)
 	{
-		if (!$container->has(Smalldb::class)) {
-			return;
-		}
-		$smalldb_definition = $container->findDefinition(Smalldb::class);
+		parent::process($container);
+
+		// ...
 	}
 
 }

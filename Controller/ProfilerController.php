@@ -20,16 +20,15 @@
 namespace Smalldb\SmalldbBundle\Controller;
 
 
-use Doctrine\Common\Annotations\AnnotationReader;
+use DateTimeImmutable;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\StateMachine\BpmnExtension\Definition\BpmnExtension;
 use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor;
 use Smalldb\StateMachine\BpmnExtension\SvgPainter;
 use Smalldb\StateMachine\Definition\Renderer\StateMachineExporter;
-use Smalldb\StateMachine\Graph\Grafovatko\GrafovatkoExporter;
+use Smalldb\Graph\Grafovatko\GrafovatkoExporter;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\SourcesExtension\Definition\SourcesExtension;
-use Symfony\Component\Debug\Debug;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -49,6 +48,7 @@ class ProfilerController implements ContainerAwareInterface
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}
+
 
 	public function machineAction(string $token, Request $request)
 	{
@@ -125,7 +125,7 @@ class ProfilerController implements ContainerAwareInterface
 			'sourceFiles' => $sourceFiles,
 			'stateChart' => $stateChart,
 			'sourceDiagrams' => $sourceDiagrams,
-			'mtime' => (new \DateTimeImmutable())->setTimestamp($definition->getMTime()),
+			'mtime' => (new DateTimeImmutable())->setTimestamp($definition->getMTime()),
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));
 	}
