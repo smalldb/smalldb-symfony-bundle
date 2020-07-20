@@ -45,6 +45,11 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 	{
 		parent::load($configs, $container);
 
+		// Reference resolver
+		$container->autowire(ReferenceValueResolver::class)
+			->setArguments([new Reference(Smalldb::class)])
+			->addTag('controller.argument_value_resolver', ['priority' => 200]);
+
 		// Developper tools
 		if (!empty($this->config['debug'])) {
 			// Data logger
@@ -73,11 +78,6 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 	public function load(array $configs, ContainerBuilder $container)
 	{
 		// ...
-
-		// Reference resolver
-		$refResolver = $container->autowire(ReferenceValueResolver::class)
-			->setArguments([new Reference(Smalldb::class)])
-			->addTag('controller.argument_value_resolver', ['priority' => 200]);
 
 		// Default services
 		if (!empty($config['smalldb'])) {
