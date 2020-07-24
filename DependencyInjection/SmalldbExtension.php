@@ -24,6 +24,7 @@ use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
+use Smalldb\SmalldbBundle\Twig\SmalldbProfilerTwigExtension;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
 use Symfony\Component\DependencyInjection\Parameter;
@@ -71,6 +72,8 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 			// Register debugger
 			$container->getDefinition(Smalldb::class)->addMethodCall('setDebugLogger', [new Reference('data_collector.smalldb')]);
 
+			$container->autowire(SmalldbProfilerTwigExtension::class)
+				->addTag('twig.extension');
 		}
 	}
 

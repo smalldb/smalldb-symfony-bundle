@@ -7,7 +7,8 @@
 		<label>
 			<select name="machine" onchange="this.form.submit()" class="card" style="margin: 0;">
 				{% for type in machineTypes -%}
-					<option{{ type == curType ? " selected" }} value="{{ type }}" class="font-normal">{{ type }}</option>
+					<option{{ type == curType ? " selected" }} value="{{ type }}"
+						class="font-normal">{{ type }}</option>
 				{%- endfor %}
 			</select>
 			<input type="submit" value="»" id="heading-hidden-submit">
@@ -18,6 +19,7 @@
 	</h2>
 </form>
 
+{#
 <div class="metrics">
 
 	<div class="metric">
@@ -50,72 +52,348 @@
 		<span class="label">Last modified</span>
 	</div>
 </div>
-{% if not definitionsSnapshot %}
-	<p class="help">Note: State machine definition is loaded from the current Smalldb configuration, which may differ from the configuration used when profiling this request.</p>
-{% endif %}
+#}
 
-{% if definition.errors is not empty %}
-<h3 class="text-danger">Errors</h3>
-<ul>
-	{% for error in definition.errors %}
-	<li class="text-danger">{{ error.getMessage() }}</li>
-	{% endfor %}
-</ul>
-{% endif %}
-
-<h3>State Diagram</h3>
-
-<div class="card" style="padding: 3em; overflow: auto;">
-	{{ stateChart | raw }}
-</div>
-
-{% if sourceFiles is not empty %}
-	<h3>Source Files</h3>
-	<ul>
-		{% for sourceFile in sourceFiles %}
-			<li><code>{{ sourceFile.getFilename() }}</code></li>
-		{% endfor %}
-	</ul>
-{% endif %}
-
-{% if sourceDiagrams is not empty %}
-<h3>Source Diagrams</h3>
 <div class="sf-tabs">
-{% for diagram in sourceDiagrams %}
-	<div class="tab ">
-		<h4 class="tab-title">{{ diagram.heading }}</h4>
+	<div class="tab">
+		<h3 class="tab-title">State Machine</h3>
+
 		<div class="tab-content">
 			<div class="card" style="padding: 3em; overflow: auto;">
-				{{ diagram.svg | raw }}
+				{{ stateChart | raw }}
+			</div>
+
+			{% if definition.errors is not empty %}
+				<h4 class="text-danger">Errors</h4>
+				<ul>
+					{% for error in definition.errors %}
+						<li class="text-danger">{{ error.getMessage() }}</li>
+					{% endfor %}
+				</ul>
+			{% endif %}
+
+			<table>
+				<thead>
+				<tr>
+					<th class="key"><big>State Machine</big></th>
+					<th></th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr>
+					<th class="key">Machine type</th>
+					<td>{{ definition.machineType }}</td>
+				</tr>
+				<tr>
+					<th>Last modified (mtime)</th>
+					<td>{{ definition.mTime }} ({{ definition.mTime | date('Y-m-d H:i:s') }})</td>
+				</tr>
+				<tr>
+					<th>Reference class</th>
+					<td>{{ profiler_dump(fqcn(definition.referenceClass)) }}</td>
+				</tr>
+				<tr>
+					<th>Repository</th>
+					<td>{{ profiler_dump(fqcn(definition.repositoryClass)) }}</td>
+				</tr>
+				<tr>
+					<th>Transitions decorator</th>
+					<td>{{ profiler_dump(fqcn(definition.transitionsClass)) }}</td>
+				</tr>
+				<tr>
+					<th>Extensions</th>
+					<td>
+						{{ _self.dumpExtensions(definition) }}
+					</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">Sources <span class="badge">{{ sourceFiles | length }}</span></h3>
+		<div class="tab-content">
+			{% if sourceFiles is not empty %}
+				<div class="card">
+					<h4>Source Files</h4>
+					<ul>
+						{% for sourceFile in sourceFiles %}
+							<li>
+								<a href="{{ sourceFile.filename | file_link(0) }}">
+									<code>{{ sourceFile.filename | file_relative }}</code>
+								</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+			{% else %}
+				<div class="empty">
+					<p>No source files specified in the definition.</p>
+				</div>
+			{% endif %}
+
+			{% if sourceDiagrams is not empty %}
+				<h4>Source Diagrams</h4>
+				<div class="sf-tabs">
+					{% for diagram in sourceDiagrams %}
+						<div class="tab ">
+							<h4 class="tab-title">{{ diagram.heading }}</h4>
+							<div class="tab-content">
+								<div class="card" style="padding: 3em; overflow: auto;">
+									{{ diagram.svg | raw }}
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">States <span class="badge">{{ definition.states | length }}</span></h3>
+		<div class="tab-content">
+			{% for state in definition.states %}
+				<table>
+					<thead>
+					<tr>
+						<th class="key">
+							<big>
+								State:
+								{{ _self.state(state) }}
+							</big>
+						</th>
+						<th></th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<th class="key">Name</th>
+						<td>{{ dump(state.name) }}</td>
+					</tr>
+					<tr>
+						<th class="key">Color</th>
+						<td>{{ dump(state.color) }}</td>
+					</tr>
+					<tr>
+						<th>Extensions</th>
+						<td>
+							{{ _self.dumpExtensions(state) }}
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			{% else %}
+				<div class="empty">
+					<p>No states defined.</p>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">Actions <span class="badge">{{ definition.actions | length }}</span></h3>
+		<div class="tab-content">
+			{% for action in definition.actions %}
+				<table>
+					<thead>
+					<tr>
+						<th class="key">
+							<big>
+								Action: {{ action.name }}
+							</big>
+						</th>
+						<th></th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<th class="key">Name</th>
+						<td>{{ dump(action.name) }}</td>
+					</tr>
+					<tr>
+						<th>Extensions</th>
+						<td>
+							{{ _self.dumpExtensions(action) }}
+						</td>
+					</tr>
+					</tbody>
+				</table>
+				<div style="margin-left: 6em; margin-bottom: 3em;">
+					{{ _self.transitions(action.transitions) }}
+				</div>
+			{% else %}
+				<div class="empty">
+					<p>No actions defined.</p>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">Transitions <span class="badge">{{ definition.transitions | length }}</span></h3>
+		<div class="tab-content">
+			{{ _self.transitions(definition.transitions) }}
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">Properties <span class="badge">{{ definition.properties | length }}</span></h3>
+		<div class="tab-content">
+			{% for property in definition.properties %}
+				<table>
+					<thead>
+					<tr>
+						<th class="key">
+							<big>
+								Property: {{ property.name }}
+							</big>
+						</th>
+						<th></th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<th class="key">Name</th>
+						<td>{{ dump(property.name) }}</td>
+					</tr>
+					<tr>
+						<th>Extensions</th>
+						<td>
+							{{ _self.dumpExtensions(property) }}
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			{% else %}
+				<div class="empty">
+					<p>No properties defined.</p>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+
+	<div class="tab">
+		{% set errorCount = definition.errors | length %}
+		<h3 class="tab-title">
+			Errors
+			<span class="badge{% if errorCount > 0 %} status-error{% endif %}">
+				{{ errorCount }}
+			</span>
+		</h3>
+		<div class="tab-content">
+			{% if definition.errors is empty %}
+				<div class="empty">
+					<p>No errors found in the state machine definition.</p>
+				</div>
+			{% else %}
+				<ul>
+					{% for error in definition.errors %}
+						<li>
+							<span class="text-danger">{{ error.getMessage() }}</span>
+							{{ dump(error) }}
+						</li>
+					{% endfor %}
+				</ul>
+			{% endif %}
+		</div>
+	</div>
+
+	<div class="tab">
+		<h3 class="tab-title">Raw Dump</h3>
+		<div class="tab-content">
+			<div class="card">
+				{{ dump(definition) }}
 			</div>
 		</div>
 	</div>
-{%  endfor %}
 </div>
+
+{% if not definitionsSnapshot %}
+	<p class="help">Note: State machine definition is loaded from the current Smalldb configuration, which may
+		differ from the configuration used when profiling this request.</p>
 {% endif %}
+
 
 {# FIXME: Link to JS file rather than inline it. #}
 <!-- <script type="text/javascript" src="{{ path('_profiler', { panel: 'smalldb', token: token, page: 'grafovatko' }) }}"></script> -->
 <script type="text/javascript">
 	//<![CDATA[
-		{{ grafovatko_js|raw }}
+	{{ grafovatko_js|raw }}
 	//]]>
 </script>
-
 <script type="text/javascript">
-if (G) {
-	console.log('Grafovatko %s.', G.version);
-	const graphElements = document.getElementsByClassName('grafovatko');
-	window.grafovatkoView = [];
-	for (const el of graphElements) {
-		window.grafovatkoView.push(new G.GraphView(el));
+	if (G) {
+		console.log('Grafovatko %s.', G.version);
+		const graphElements = document.getElementsByClassName('grafovatko');
+		window.grafovatkoView = [];
+		for (const el of graphElements) {
+			window.grafovatkoView.push(new G.GraphView(el));
+		}
+	} else {
+		console.error("Grafovatko library is not loaded.");
 	}
-} else {
-	console.error("Grafovatko library is not loaded.");
-}
 </script>
 
+{% macro dumpExtensions(definition) %}
+	{% for ext in definition.extensionClassNames %}
+		{{ dump(definition.getExtension(ext)) }}
+	{% else %}
+		<em>&mdash;</em>
+	{% endfor %}
+{% endmacro %}
 
-<h3>State machine definition:</h3>
-{{ dump(definition) }}
+{% macro state(state) %}
+	<b style="border: 1px solid; border-radius: 1em; padding: 0.2em 0.6em; background: {{ state.color | default("#eee") }}">
+		{%- if state.name %}<span>{{ state.name }}</span>{% else %}<i>not exists</i>{% endif -%}
+	</b>
+{% endmacro %}
 
+{% macro transitions(transitions) %}
+	{% for transition in transitions %}
+		<table>
+			<thead>
+			<tr>
+				<th class="key">
+					<big>
+						Transition: {{ transition.name }}
+					</big>
+				</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<th class="key">Name</th>
+				<td>{{ dump(transition.name) }}</td>
+			</tr>
+			<tr>
+				<th class="key">Source &amp; target states</th>
+				<td>
+					{{ _self.state(transition.sourceState) }}
+					<span style="border-bottom: 1px solid; padding: 0 1.5em; position: relative; top: -0.5em;">{{ transition.name }}</span>▶
+					{% for ts in transition.targetStates %}
+						{{ _self.state(ts) }}
+					{% endfor %}
+				</td>
+			</tr>
+			<tr>
+				<th class="key">Color</th>
+				<td>{{ dump(transition.color) }}</td>
+			</tr>
+			<tr>
+				<th>Extensions</th>
+				<td>
+					{{ _self.dumpExtensions(transition) }}
+				</td>
+			</tr>
+			</tbody>
+		</table>
+	{% else %}
+		<div class="empty">
+			<p>No transitions defined.</p>
+		</div>
+	{% endfor %}
+{% endmacro %}
