@@ -1,0 +1,34 @@
+{% import "@Smalldb/data_collector/machine_macros.html.twig" as M %}
+
+{% for action in actions %}
+	<table>
+		<colgroup>
+			<col width="16%">
+			<col width="8%">
+			<col width="76%">
+		</colgroup>
+		<thead>
+		<tr>
+			<th colspan="3" class="key">
+				<big>
+					Action: {{ action.name }}
+				</big>
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+			<th colspan="2" class="key">Name</th>
+			<td>{{ dump(action.name) }}</td>
+		</tr>
+		{{ M.dumpExtensions(action) }}
+		</tbody>
+	</table>
+	<div style="margin-left: 6em; margin-bottom: 3em;">
+		{{ M.transitions(action.transitions) }}
+	</div>
+{% else %}
+	<div class="empty">
+		<p>No actions defined.</p>
+	</div>
+{% endfor %}

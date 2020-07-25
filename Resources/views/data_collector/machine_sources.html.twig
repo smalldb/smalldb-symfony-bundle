@@ -1,0 +1,36 @@
+{% import "@Smalldb/data_collector/machine_macros.html.twig" as M %}
+
+{% if sourceFiles is not empty %}
+	<div class="card">
+		<h4>Source Files</h4>
+		<ul>
+			{% for sourceFile in sourceFiles %}
+				<li>
+					<a href="{{ sourceFile.filename | file_link(0) }}">
+						<code>{{ sourceFile.filename | file_relative }}</code>
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+	</div>
+{% else %}
+	<div class="empty">
+		<p>No source files specified in the definition.</p>
+	</div>
+{% endif %}
+
+{% if sourceDiagrams is not empty %}
+	<h4>Source Diagrams</h4>
+	<div class="sf-tabs">
+		{% for diagram in sourceDiagrams %}
+			<div class="tab ">
+				<h4 class="tab-title">{{ diagram.heading }}</h4>
+				<div class="tab-content">
+					<div class="card" style="padding: 3em; overflow: auto;">
+						{{ diagram.svg | raw }}
+					</div>
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+{% endif %}

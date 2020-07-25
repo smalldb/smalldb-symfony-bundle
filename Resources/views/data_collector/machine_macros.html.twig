@@ -1,0 +1,73 @@
+{% macro machine(definition, stateChart) %}
+	{% include "@Smalldb/data_collector/machine_machine.html.twig"
+		with {definition: definition, stateChart: stateChart} only %}
+{% endmacro %}
+
+
+{% macro sources(sourceFiles, sourceDiagrams) %}
+	{% include "@Smalldb/data_collector/machine_sources.html.twig"
+		with {sourceFiles: sourceFiles, sourceDiagrams: sourceDiagrams} only %}
+{% endmacro %}
+
+
+{% macro states(states) %}
+	{% include "@Smalldb/data_collector/machine_states.html.twig"
+		with {states: states} only %}
+{% endmacro %}
+
+
+{% macro actions(actions) %}
+	{% include "@Smalldb/data_collector/machine_actions.html.twig"
+		with {actions: actions} only %}
+{% endmacro %}
+
+
+{% macro transitions(transitions) %}
+	{% include "@Smalldb/data_collector/machine_transitions.html.twig"
+		with {transitions: transitions} only %}
+{% endmacro %}
+
+
+{% macro properties(properties) %}
+	{% include "@Smalldb/data_collector/machine_properties.html.twig"
+		with {properties: properties} only %}
+{% endmacro %}
+
+
+{% macro dumpExtensions(definition) %}
+	{% for extClass in definition.extensionClassNames %}
+		{% set extProps = get_object_vars(definition.getExtension(extClass)) %}
+		{% set extRows = extProps | length %}
+		{% for k, v in extProps %}
+			<tr>
+				{% if loop.first %}
+					<th class="key" nowrap rowspan="{{ extRows }}">{{ extClass | abbr_class }}</th>
+				{% endif %}
+				<th class="key">{{ k }}</th>
+				<td>{{ dump(v) }}</td>
+			</tr>
+		{% endfor %}
+	{% endfor %}
+{% endmacro %}
+
+
+{% macro dumpErrors(errors, showDetails) %}
+	<ul>
+	{% for error in errors %}
+		<li>
+			<span class="text-danger">{{ error.getMessage() }}</span>
+			{% if showDetails %}
+			{{ dump(error) }}
+			{% endif %}
+		</li>
+	{% endfor %}
+	</ul>
+{% endmacro %}
+
+
+{% macro state(state) %}
+	<b style="border: 1px solid; border-radius: 1em; padding: 0.2em 0.6em; background: {{ state.color | default("#eee") }}">
+		{%- if state.name %}<span>{{ state.name }}</span>{% else %}<i>not exists</i>{% endif -%}
+	</b>
+{% endmacro %}
+

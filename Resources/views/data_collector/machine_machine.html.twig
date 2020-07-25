@@ -1,0 +1,47 @@
+{% import "@Smalldb/data_collector/machine_macros.html.twig" as M %}
+
+<div class="card" style="padding: 3em; overflow: auto;">
+	{{ stateChart | raw }}
+</div>
+
+{% if definition.errors is not empty %}
+	<h4 class="text-danger">Errors</h4>
+	{{ M.dumpErrors(definition.errors, false) }}
+{% endif %}
+
+<table>
+	<colgroup>
+		<col width="16%">
+		<col width="8%">
+		<col width="76%">
+	</colgroup>
+	<thead>
+	<tr>
+		<th colspan="3" class="key"><big>State Machine</big></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<th colspan="2" class="key">Machine type</th>
+		<td>{{ definition.machineType }}</td>
+	</tr>
+	<tr>
+		<th colspan="2">Last modified (mtime)</th>
+		<td>{{ definition.mTime }}
+			({{ definition.mTime | date('Y-m-d H:i:s') }})
+		</td>
+	</tr>
+	<tr>
+		<th colspan="2">Reference class</th>
+		<td>{{ profiler_dump(fqcn(definition.referenceClass)) }}</td>
+	</tr>
+	<tr>
+		<th colspan="2">Repository</th>
+		<td>{{ profiler_dump(fqcn(definition.repositoryClass)) }}</td>
+	</tr>
+	<tr>
+		<th colspan="2">Transitions decorator</th>
+		<td>{{ profiler_dump(fqcn(definition.transitionsClass)) }}</td>
+	</tr>
+	{{ M.dumpExtensions(definition) }}
+</table>
