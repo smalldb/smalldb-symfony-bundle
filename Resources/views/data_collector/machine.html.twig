@@ -73,40 +73,40 @@
 			{% endif %}
 
 			<table>
+				<colgroup>
+					<col width="16%">
+					<col width="8%">
+					<col width="76%">
+				</colgroup>
 				<thead>
 				<tr>
-					<th class="key"><big>State Machine</big></th>
-					<th></th>
+					<th colspan="3" class="key"><big>State Machine</big></th>
 				</tr>
 				</thead>
 				<tbody>
 				<tr>
-					<th class="key">Machine type</th>
+					<th colspan="2" class="key">Machine type</th>
 					<td>{{ definition.machineType }}</td>
 				</tr>
 				<tr>
-					<th>Last modified (mtime)</th>
-					<td>{{ definition.mTime }} ({{ definition.mTime | date('Y-m-d H:i:s') }})</td>
+					<th colspan="2">Last modified (mtime)</th>
+					<td>{{ definition.mTime }}
+						({{ definition.mTime | date('Y-m-d H:i:s') }})
+					</td>
 				</tr>
 				<tr>
-					<th>Reference class</th>
+					<th colspan="2">Reference class</th>
 					<td>{{ profiler_dump(fqcn(definition.referenceClass)) }}</td>
 				</tr>
 				<tr>
-					<th>Repository</th>
+					<th colspan="2">Repository</th>
 					<td>{{ profiler_dump(fqcn(definition.repositoryClass)) }}</td>
 				</tr>
 				<tr>
-					<th>Transitions decorator</th>
+					<th colspan="2">Transitions decorator</th>
 					<td>{{ profiler_dump(fqcn(definition.transitionsClass)) }}</td>
 				</tr>
-				<tr>
-					<th>Extensions</th>
-					<td>
-						{{ _self.dumpExtensions(definition) }}
-					</td>
-				</tr>
-				</tbody>
+				{{ _self.dumpExtensions(definition) }}
 			</table>
 		</div>
 	</div>
@@ -157,32 +157,31 @@
 		<div class="tab-content">
 			{% for state in definition.states %}
 				<table>
+					<colgroup>
+						<col width="16%">
+						<col width="8%">
+						<col width="76%">
+					</colgroup>
 					<thead>
 					<tr>
-						<th class="key">
+						<th colspan="3" class="key">
 							<big>
 								State:
 								{{ _self.state(state) }}
 							</big>
 						</th>
-						<th></th>
 					</tr>
 					</thead>
 					<tbody>
 					<tr>
-						<th class="key">Name</th>
+						<th colspan="2" class="key">Name</th>
 						<td>{{ dump(state.name) }}</td>
 					</tr>
 					<tr>
-						<th class="key">Color</th>
+						<th colspan="2" class="key">Color</th>
 						<td>{{ dump(state.color) }}</td>
 					</tr>
-					<tr>
-						<th>Extensions</th>
-						<td>
-							{{ _self.dumpExtensions(state) }}
-						</td>
-					</tr>
+					{{ _self.dumpExtensions(state) }}
 					</tbody>
 				</table>
 			{% else %}
@@ -198,27 +197,26 @@
 		<div class="tab-content">
 			{% for action in definition.actions %}
 				<table>
+					<colgroup>
+						<col width="16%">
+						<col width="8%">
+						<col width="76%">
+					</colgroup>
 					<thead>
 					<tr>
-						<th class="key">
+						<th colspan="3" class="key">
 							<big>
 								Action: {{ action.name }}
 							</big>
 						</th>
-						<th></th>
 					</tr>
 					</thead>
 					<tbody>
 					<tr>
-						<th class="key">Name</th>
+						<th colspan="2" class="key">Name</th>
 						<td>{{ dump(action.name) }}</td>
 					</tr>
-					<tr>
-						<th>Extensions</th>
-						<td>
-							{{ _self.dumpExtensions(action) }}
-						</td>
-					</tr>
+					{{ _self.dumpExtensions(action) }}
 					</tbody>
 				</table>
 				<div style="margin-left: 6em; margin-bottom: 3em;">
@@ -244,27 +242,26 @@
 		<div class="tab-content">
 			{% for property in definition.properties %}
 				<table>
+					<colgroup>
+						<col width="16%">
+						<col width="8%">
+						<col width="76%">
+					</colgroup>
 					<thead>
 					<tr>
-						<th class="key">
+						<th colspan="3" class="key">
 							<big>
 								Property: {{ property.name }}
 							</big>
 						</th>
-						<th></th>
 					</tr>
 					</thead>
 					<tbody>
 					<tr>
-						<th class="key">Name</th>
+						<th colspan="2" class="key">Name</th>
 						<td>{{ dump(property.name) }}</td>
 					</tr>
-					<tr>
-						<th>Extensions</th>
-						<td>
-							{{ _self.dumpExtensions(property) }}
-						</td>
-					</tr>
+					{{ _self.dumpExtensions(property) }}
 					</tbody>
 				</table>
 			{% else %}
@@ -338,10 +335,18 @@
 </script>
 
 {% macro dumpExtensions(definition) %}
-	{% for ext in definition.extensionClassNames %}
-		{{ dump(definition.getExtension(ext)) }}
-	{% else %}
-		<em>&mdash;</em>
+	{% for extClass in definition.extensionClassNames %}
+		{% set extProps = get_object_vars(definition.getExtension(extClass)) %}
+		{% set extRows = extProps | length %}
+		{% for k, v in extProps %}
+			<tr>
+				{% if loop.first %}
+					<th class="key" nowrap rowspan="{{ extRows }}">{{ extClass | abbr_class }}</th>
+				{% endif %}
+				<th class="key">{{ k }}</th>
+				<td>{{ dump(v) }}</td>
+			</tr>
+		{% endfor %}
 	{% endfor %}
 {% endmacro %}
 
@@ -354,23 +359,27 @@
 {% macro transitions(transitions) %}
 	{% for transition in transitions %}
 		<table>
+			<colgroup>
+				<col width="16%">
+				<col width="8%">
+				<col width="76%">
+			</colgroup>
 			<thead>
 			<tr>
-				<th class="key">
+				<th colspan="3" class="key">
 					<big>
 						Transition: {{ transition.name }}
 					</big>
 				</th>
-				<th></th>
 			</tr>
 			</thead>
 			<tbody>
 			<tr>
-				<th class="key">Name</th>
+				<th colspan="2" class="key">Name</th>
 				<td>{{ dump(transition.name) }}</td>
 			</tr>
 			<tr>
-				<th class="key">Source &amp; target states</th>
+				<th colspan="2" class="key">Source &amp; target states</th>
 				<td>
 					{{ _self.state(transition.sourceState) }}
 					<span style="border-bottom: 1px solid; padding: 0 1.5em; position: relative; top: -0.5em;">{{ transition.name }}</span>▶
@@ -380,15 +389,10 @@
 				</td>
 			</tr>
 			<tr>
-				<th class="key">Color</th>
+				<th colspan="2" class="key">Color</th>
 				<td>{{ dump(transition.color) }}</td>
 			</tr>
-			<tr>
-				<th>Extensions</th>
-				<td>
-					{{ _self.dumpExtensions(transition) }}
-				</td>
-			</tr>
+			{{ _self.dumpExtensions(transition) }}
 			</tbody>
 		</table>
 	{% else %}
