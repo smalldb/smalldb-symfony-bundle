@@ -18,6 +18,8 @@
 
 namespace Smalldb\SmalldbBundle\Twig;
 
+use Smalldb\StateMachine\Definition\ExtensibleDefinition;
+use Smalldb\StateMachine\StyleExtension\Definition\StyleExtension;
 use Symfony\Component\VarDumper\Caster\ClassStub;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Twig\Extension\AbstractExtension;
@@ -35,6 +37,15 @@ class SmalldbProfilerTwigExtension extends AbstractExtension
 				? fn(?string $fqcn) => new Data([0 => [0 => $fqcn === null ? null : new ClassStub($fqcn)]])
 				: fn($fqcn) => $fqcn),
 			new TwigFunction('get_object_vars', fn($obj) => (fn() => get_object_vars($this))->call($obj)),
+			new TwigFunction('styleExt', function(ExtensibleDefinition $definition): ?StyleExtension {
+				if ($definition->hasExtension(StyleExtension::class)) {
+					/** @var StyleExtension $ext */
+					$ext = $definition->getExtension(StyleExtension::class);
+					return $ext;
+				} else {
+					return null;
+				}
+			})
 		];
 	}
 

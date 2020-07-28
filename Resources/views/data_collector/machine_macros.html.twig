@@ -66,7 +66,7 @@
 
 
 {% macro state(state) %}
-	<b style="border: 1px solid; border-radius: 1em; padding: 0.2em 0.6em; background: {{ state.color | default("#eee") }}">
+	<b style="border: 1px solid; border-radius: 1em; padding: 0.2em 0.6em; background: {{ styleExt(state).color | default("#eee") }}">
 		{%- if state.name %}<span>{{ state.name }}</span>{% else %}<i>not exists</i>{% endif -%}
 	</b>
 {% endmacro %}
