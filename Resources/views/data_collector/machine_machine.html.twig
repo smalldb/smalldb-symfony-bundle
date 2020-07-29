@@ -13,30 +13,30 @@
 	{{ M.tableColumns() }}
 	<thead>
 	<tr>
-		<th colspan="3" class="key"><big>State Machine</big></th>
+		<th colspan="3" class="key font-normal"><big>State Machine</big></th>
 	</tr>
 	</thead>
 	<tbody>
 	<tr>
-		<th colspan="2" class="key">Machine type</th>
+		<th colspan="2" class="key font-normal">Machine type</th>
 		<td>{{ definition.machineType }}</td>
 	</tr>
 	<tr>
-		<th colspan="2">Last modified (mtime)</th>
+		<th colspan="2" class="key font-normal">Last modified (mtime)</th>
 		<td>{{ definition.mTime }}
 			({{ definition.mTime | date('Y-m-d H:i:s') }})
 		</td>
 	</tr>
 	<tr>
-		<th colspan="2">Reference class</th>
+		<th colspan="2" class="key font-normal">Reference class</th>
 		<td>{{ profiler_dump(fqcn(definition.referenceClass)) }}</td>
 	</tr>
 	<tr>
-		<th colspan="2">Repository</th>
+		<th colspan="2" class="key font-normal">Repository</th>
 		<td>{{ profiler_dump(fqcn(definition.repositoryClass)) }}</td>
 	</tr>
 	<tr>
-		<th colspan="2">Transitions decorator</th>
+		<th colspan="2" class="key font-normal">Transitions decorator</th>
 		<td>{{ profiler_dump(fqcn(definition.transitionsClass)) }}</td>
 	</tr>
 	{{ M.dumpExtensions(definition) }}

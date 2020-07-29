@@ -22,6 +22,7 @@ namespace Smalldb\SmalldbBundle\Controller;
 
 use DateTimeImmutable;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
+use Smalldb\StateMachine\AccessControlExtension\Definition\AccessControlExtension;
 use Smalldb\StateMachine\BpmnExtension\Definition\BpmnExtension;
 use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor;
 use Smalldb\StateMachine\BpmnExtension\SvgPainter;
@@ -116,6 +117,14 @@ class ProfilerController implements ContainerAwareInterface
 			$sourceFiles = null;
 		}
 
+		if ($definition->hasExtension(AccessControlExtension::class)) {
+			/** @var AccessControlExtension $accessControlExt */
+			$accessControlExt = $definition->getExtension(AccessControlExtension::class);
+		} else {
+			$accessControlExt = null;
+		}
+
+
 		return new Response($this->container->get('twig')->render('@Smalldb/data_collector/machine.html.twig', array(
 			'token' => $token,
 			'panel' => $request->attributes->get('panel'),
@@ -126,6 +135,7 @@ class ProfilerController implements ContainerAwareInterface
 			'sourceFiles' => $sourceFiles,
 			'stateChart' => $stateChart,
 			'sourceDiagrams' => $sourceDiagrams,
+			'accessControl' => $accessControlExt,
 			'mtime' => (new DateTimeImmutable())->setTimestamp($definition->getMTime()),
 			'grafovatko_js' => file_get_contents(__DIR__.'/../Resources/grafovatko.js/grafovatko.min.js'), // FIXME
 		)));

@@ -65,12 +65,14 @@
 		</div>
 	</div>
 
+	{% if sourceFiles is not null %}
 	<div class="tab">
 		<h3 class="tab-title">Sources <span class="badge">{{ sourceFiles | length }}</span></h3>
 		<div class="tab-content">
 			{{ M.sources(sourceFiles, sourceDiagrams) }}
 		</div>
 	</div>
+	{% endif %}
 
 	<div class="tab">
 		<h3 class="tab-title">States <span class="badge">{{ definition.states | length }}</span></h3>
@@ -99,6 +101,15 @@
 			{{ M.properties(definition.properties) }}
 		</div>
 	</div>
+
+	{% if accessControl is not null %}
+		<div class="tab">
+			<h3 class="tab-title">Access Control <span class="badge">{{ accessControl.policies | length }}</span></h3>
+			<div class="tab-content">
+				{{ M.accessControl(accessControl) }}
+			</div>
+		</div>
+	{% endif %}
 
 	<div class="tab">
 		{% set errorCount = definition.errors | length %}

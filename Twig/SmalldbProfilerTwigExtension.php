@@ -36,6 +36,7 @@ class SmalldbProfilerTwigExtension extends AbstractExtension
 			new TwigFunction('fqcn', class_exists(ClassStub::class)
 				? fn(?string $fqcn) => new Data([0 => [0 => $fqcn === null ? null : new ClassStub($fqcn)]])
 				: fn($fqcn) => $fqcn),
+			new TwigFunction('get_class', fn($obj) => (fn() => get_class($this))->call($obj)),
 			new TwigFunction('get_object_vars', fn($obj) => (fn() => get_object_vars($this))->call($obj)),
 			new TwigFunction('styleExt', function(ExtensibleDefinition $definition): ?StyleExtension {
 				if ($definition->hasExtension(StyleExtension::class)) {

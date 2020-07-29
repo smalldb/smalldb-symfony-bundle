@@ -34,6 +34,12 @@
 {% endmacro %}
 
 
+{% macro accessControl(accessControl) %}
+	{% include "@Smalldb/data_collector/machine_accesscontrol.html.twig"
+		with {accessControl: accessControl} only %}
+{% endmacro %}
+
+
 {% macro dumpExtensions(definition) %}
 	{% for extClass in definition.extensionClassNames %}
 		{% set extProps = get_object_vars(definition.getExtension(extClass)) %}
@@ -41,7 +47,7 @@
 		{% for k, v in extProps %}
 			<tr>
 				{% if loop.first %}
-					<th class="key" nowrap rowspan="{{ extRows }}">{{ extClass | abbr_class }}</th>
+					<th class="key font-normal" nowrap rowspan="{{ extRows }}">{{ extClass | abbr_class }}</th>
 				{% endif %}
 				<th class="key">{{ k }}</th>
 				<td>{{ dump(v) }}</td>
