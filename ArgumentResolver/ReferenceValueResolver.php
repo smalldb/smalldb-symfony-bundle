@@ -81,7 +81,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	public function supports(Request $request, ArgumentMetadata $argument)
 	{
 		if (isset($this->referenceClassMap[$argument->getType()])) {
-			return $request->attributes->has($argument->getName());
+			return $request->attributes->has($argument->getName()) || $request->attributes->has('id');
 		} else {
 			return false;
 		}
@@ -97,7 +97,7 @@ class ReferenceValueResolver implements ArgumentValueResolverInterface
 	public function resolve(Request $request, ArgumentMetadata $argument)
 	{
 		$machineType = $this->referenceClassMap[$argument->getType()];
-		$id = $request->attributes->get($argument->getName());
+		$id = $request->attributes->get($argument->getName()) ?? $request->attributes->get('id');
 		if ($id === null) {
 			throw new \LogicException("Resolved reference should not be a null reference: " . $argument->getType());
 		}
