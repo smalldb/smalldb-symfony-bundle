@@ -24,6 +24,7 @@ use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
+use Smalldb\SmalldbBundle\Security\SmalldbVoter;
 use Smalldb\SmalldbBundle\Twig\SmalldbProfilerTwigExtension;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
@@ -47,9 +48,13 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 		parent::load($configs, $container);
 
 		// Reference resolver
-		$container->autowire(ReferenceValueResolver::class)
+		$container->autowire(ReferenceValueResolver::class, ReferenceValueResolver::class)
 			->setArguments([new Reference(Smalldb::class)])
 			->addTag('controller.argument_value_resolver', ['priority' => 200]);
+
+		// Security Voter
+		$container->autowire(SmalldbVoter::class, SmalldbVoter::class)
+			->setAutoconfigured(true);
 
 		// Developper tools
 		if (!empty($this->config['debug'])) {
