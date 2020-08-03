@@ -18,28 +18,36 @@
 
 namespace Smalldb\SmalldbBundle\Security;
 
+use Smalldb\StateMachine\InvalidArgumentException;
 use Smalldb\StateMachine\ReferenceInterface;
 use Smalldb\StateMachine\RuntimeException;
+use Smalldb\StateMachine\Smalldb;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 
 class SmalldbVoter implements VoterInterface
 {
+	private Smalldb $smalldb;
 	private bool $isAlreadyCalled = false;
+
+
+	public function __construct(Smalldb $smalldb)
+	{
+		$this->smalldb = $smalldb;
+	}
 
 
 	protected function supports(string $attribute, $subject)
 	{
-		return $subject instanceof ReferenceInterface;
+		return $subject instanceof ReferenceInterface
+			|| $attribute instanceof SmalldbRole
+			|| (is_string($attribute) && strpos($attribute, '!') !== false);
 	}
+
 
 	public function vote(TokenInterface $token, $subject, array $attributes)
 	{
-		if (!$subject instanceof ReferenceInterface) {
-			return self::ACCESS_ABSTAIN;
-		}
-
 		if ($this->isAlreadyCalled) {
 			throw new RuntimeException("Recursive loop detected in " . __CLASS__ . ".");
 		}
@@ -49,15 +57,44 @@ class SmalldbVoter implements VoterInterface
 			// At least one of the transitions must be allowed. This behavior is consistent with
 			// Symfony\Component\Security\Core\Authorization\Voter\Voter::voteOnAttribute().
 			foreach ($attributes as $attribute) {
-				if ($subject->isTransitionAllowed($attribute)) {
-					return self::ACCESS_GRANTED;
+				if ($attribute instanceof SmalldbRole) {
+					return $this->voteOnTransition($attribute->machineType, $attribute->transition, $subject);
+				}
+
+				if (is_string($attribute) && ($p = strpos($attribute, '!')) !== false) {
+					$machineType = substr($attribute, 0, $p);
+					$transition = substr($attribute, $p + 1);
+					return $this->voteOnTransition($machineType, $transition, $subject);
+				}
+
+				if ($subject instanceof ReferenceInterface) {
+					return $this->voteOnTransition(null, $attribute, $subject);
 				}
 			}
-			return self::ACCESS_DENIED;
+			return self::ACCESS_ABSTAIN;
 		}
 		finally{
 			$this->isAlreadyCalled = false;
 		}
+	}
+
+
+	private function voteOnTransition(?string $machineType, string $transitionName, $subject)
+	{
+		if ($subject instanceof ReferenceInterface) {
+			$ref = $subject;
+			if ($machineType !== null) {
+				if ($machineType !== $ref->getMachineType() && ! $ref instanceof $machineType) {
+					return self::ACCESS_DENIED;
+				}
+			}
+		} else if ($subject === null && $machineType !== null) {
+			$ref = $this->smalldb->ref($machineType, null);
+		} else {
+			throw new InvalidArgumentException("Unsupported subject.");
+		}
+
+		return $ref->isTransitionAllowed($transitionName) ? self::ACCESS_GRANTED : self::ACCESS_DENIED;
 	}
 
 }
