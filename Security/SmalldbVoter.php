@@ -61,14 +61,14 @@ class SmalldbVoter implements VoterInterface
 					return $this->voteOnTransition($attribute->machineType, $attribute->transition, $subject);
 				}
 
+				if (is_string($attribute) && ($attribute[0] === '!')) {
+					return $this->voteOnTransition(null, substr($attribute, 1), $subject);
+				}
+
 				if (is_string($attribute) && ($p = strpos($attribute, '!')) !== false) {
 					$machineType = substr($attribute, 0, $p);
 					$transition = substr($attribute, $p + 1);
 					return $this->voteOnTransition($machineType, $transition, $subject);
-				}
-
-				if ($subject instanceof ReferenceInterface) {
-					return $this->voteOnTransition(null, $attribute, $subject);
 				}
 			}
 			return self::ACCESS_ABSTAIN;

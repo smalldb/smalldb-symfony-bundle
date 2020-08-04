@@ -18,6 +18,8 @@
 
 namespace Smalldb\SmalldbBundle\Security;
 
+use Smalldb\StateMachine\InvalidArgumentException;
+
 
 /**
  * Helper annotation to provide transition role for IsGranted.
@@ -28,16 +30,20 @@ namespace Smalldb\SmalldbBundle\Security;
 class SmalldbRole implements \Stringable
 {
 
-	public string $machineType;
+	public ?string $machineType = null;
 	public ?string $transition = null;
 
 
 	public function __toString()
 	{
 		if (isset($this->transition)) {
-			return $this->machineType . '!' . $this->transition;
+			if (isset($this->machineType)) {
+				return $this->machineType . '!' . $this->transition;
+			} else {
+				return '!' . $this->transition;
+			}
 		} else {
-			return $this->machineType;
+			throw new InvalidArgumentException("@SmalldbRole: Invalid arguments");
 		}
 	}
 
