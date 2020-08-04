@@ -24,14 +24,16 @@ use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
 use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
+use Smalldb\SmalldbBundle\Security\SmalldbUserProvider;
 use Smalldb\SmalldbBundle\Security\SmalldbVoter;
+use Smalldb\SmalldbBundle\Security\UserRepositoryInterface;
 use Smalldb\SmalldbBundle\Twig\SmalldbProfilerTwigExtension;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\SymfonyDI\SmalldbExtension as LibSmalldbExtension;
-use Symfony\Component\DependencyInjection\Parameter;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 
 class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterface
@@ -55,6 +57,13 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 		// Security Voter
 		$container->autowire(SmalldbVoter::class, SmalldbVoter::class)
 			->setAutoconfigured(true);
+
+		// User provider
+		$container->autowire(SmalldbUserProvider::class, SmalldbUserProvider::class)
+			->addMethodCall('setSmalldb', [new Reference(Smalldb::class)])
+			->addMethodCall('addUserRepositories', [tagged_iterator('smalldb.user_repository')]);
+		$container->registerForAutoconfiguration(UserRepositoryInterface::class)
+			->addTag('smalldb.user_repository');
 
 		// Developper tools
 		if (!empty($this->config['debug'])) {
@@ -87,35 +96,6 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 	{
 		// ...
 
-		// Default services
-		if (!empty($config['smalldb'])) {
-			// Default machine implementations as non-shared services
-			$container->autowire(\Smalldb\StateMachine\FlupdoMachine::class)->setPublic(true)->setShared(false);
-			$container->autowire(\Smalldb\StateMachine\FlupdoCrudMachine::class)->setPublic(true)->setShared(false);
-			$container->autowire(\Smalldb\StateMachine\Auth\SharedTokenMachine::class)->setPublic(true)->setShared(false);
-
-			// Create default Smalldb backend
-			if (!empty($config['smalldb']['base_dir'])) {
-				$cache_enabled = !($config['smalldb']['cache_disabled'] ?? false); // JsonDirBackend respects cache_disabled too.
-
-				$backend = $container->autowire($cache_enabled ? SimpleBackend::class : JsonDirBackend::class)
-					->addMethodCall('setStateMachineServiceLocator', [new Reference('service_container')])
-					->addMethodCall('initializeBackend', [$config['smalldb']])
-					->addTag('smalldb.backend')
-					->setShared(true);
-
-				if ($cache_enabled) {
-					// Bake configuration into the DI container.
-					$backend_config_reader = new JsonDirReader($config['smalldb']['base_dir']);
-					$backend_config_reader->detectConfiguration();
-					$backend_config = $backend_config_reader->loadConfiguration();
-					$container->setParameter('smalldb.generated_config', $backend_config);
-					$container->setParameter('smalldb.generated_reference_class_map', ReferenceValueResolver::buildReferenceClassMapFromConfig($backend_config));
-					$backend->addMethodCall('registerAllMachineTypes', [new Parameter('smalldb.generated_config')]);
-					$refResolver->addMethodCall('setReferenceClassMap', [new Parameter('smalldb.generated_reference_class_map')]);
-				}
-			}
-
 			// Initialize authenticator
 			if (empty($config['auth']['class'])) {
 				throw new \InvalidArgumentException('Authenticator not defined. Please set smalldb.auth.class option.');
@@ -140,7 +120,8 @@ class SmalldbExtension extends LibSmalldbExtension implements CompilerPassInterf
 				->setArguments([new Reference(Smalldb::class), $config['smalldb']['code_dest_dir']])
 				->addTag('console.command')
 				->setShared(false);
-		}
+
+		// ...
 
 		return $config;
 	}
