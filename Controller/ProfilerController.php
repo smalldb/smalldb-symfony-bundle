@@ -24,10 +24,12 @@ use DateTimeImmutable;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
 use Smalldb\StateMachine\AccessControlExtension\Definition\AccessControlExtension;
 use Smalldb\StateMachine\BpmnExtension\Definition\BpmnExtension;
-use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor;
+use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor as BpmnGrafovatkoProcessor;
 use Smalldb\StateMachine\BpmnExtension\SvgPainter;
 use Smalldb\StateMachine\Definition\Renderer\StateMachineExporter;
 use Smalldb\Graph\Grafovatko\GrafovatkoExporter;
+use Smalldb\StateMachine\GraphMLExtension\GrafovatkoProcessor as GraphMLGrafovatkoProcessor;
+use Smalldb\StateMachine\GraphMLExtension\GraphMLExtension;
 use Smalldb\StateMachine\Smalldb;
 use Smalldb\StateMachine\SourcesExtension\Definition\SourcesExtension;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
@@ -81,29 +83,46 @@ class ProfilerController implements ContainerAwareInterface
 
 		$sourceDiagrams = [];
 
-		if ($definition->hasExtension(BpmnExtension::class)) {
-			/** @var BpmnExtension $ext */
-			$ext = $definition->getExtension(BpmnExtension::class);
-			$diagramInfoList = $ext->getDiagramInfo();
-			foreach ($diagramInfoList as $diagramInfo) {
-				$bpmnGraph = $diagramInfo->getBpmnGraph();
+		if ($definition->hasExtension(GraphMLExtension::class)) {
+			/** @var GraphMLExtension $graphmlExt */
+			$graphmlExt = $definition->getExtension(GraphMLExtension::class);
+			$diagramInfoList = $graphmlExt->getDiagramInfo();
+			foreach ($diagramInfoList as $graphmlDiagramInfo) {
+				$graph = $graphmlDiagramInfo->getGraph();
+				$renderer = new GrafovatkoExporter($graph);
+				$renderer->addProcessor(new GraphMLGrafovatkoProcessor());
+				$filename = $graphmlDiagramInfo->getGraphmlFileName();
+				$renderer->setPrefix(md5($filename));
+				$sourceDiagrams[] = [
+					"heading" => basename($filename) . " (GraphML as interpreted)",
+					"svg" => $renderer->exportSvgElement($grafovatkoAttrs),
+				];
+			}
+		}
 
-				$svgFileName = $diagramInfo->getSvgFileName();
+		if ($definition->hasExtension(BpmnExtension::class)) {
+			/** @var BpmnExtension $bpmnExt */
+			$bpmnExt = $definition->getExtension(BpmnExtension::class);
+			$diagramInfoList = $bpmnExt->getDiagramInfo();
+			foreach ($diagramInfoList as $bpmnDiagramInfo) {
+				$bpmnGraph = $bpmnDiagramInfo->getBpmnGraph();
+
+				$svgFileName = $bpmnDiagramInfo->getSvgFileName();
 				if ($svgFileName && file_exists($svgFileName)) {
 					$svgContent = file_get_contents($svgFileName);
 					$svgPainter = new SvgPainter();
-					$colorizedSvgContent = $svgPainter->colorizeSvgFile($svgContent, $bpmnGraph, $diagramInfo->getTargetParticipant(), [], md5($svgFileName));
+					$colorizedSvgContent = $svgPainter->colorizeSvgFile($svgContent, $bpmnGraph, $bpmnDiagramInfo->getTargetParticipant(), [], md5($svgFileName));
 					$sourceDiagrams[] = [
-						"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as colorized SVG)",
+						"heading" => basename($bpmnDiagramInfo->getBpmnFileName()) . " (BPMN as colorized SVG)",
 						"svg" => $colorizedSvgContent,
 					];
 				}
 
 				$renderer = new GrafovatkoExporter($bpmnGraph);
-				$renderer->setPrefix(md5($diagramInfo->getBpmnFileName()));
-				$renderer->addProcessor(new GrafovatkoProcessor($diagramInfo->getTargetParticipant()));
+				$renderer->setPrefix(md5($bpmnDiagramInfo->getBpmnFileName()));
+				$renderer->addProcessor(new BpmnGrafovatkoProcessor($bpmnDiagramInfo->getTargetParticipant()));
 				$sourceDiagrams[] = [
-					"heading" => basename($diagramInfo->getBpmnFileName()) . " (BPMN as interpreted)",
+					"heading" => basename($bpmnDiagramInfo->getBpmnFileName()) . " (BPMN as interpreted)",
 					"svg" => $renderer->exportSvgElement($grafovatkoAttrs),
 				];
 			}
