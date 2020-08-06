@@ -22,7 +22,7 @@ namespace Smalldb\SmalldbBundle\Controller;
 
 use DateTimeImmutable;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
-use Smalldb\StateMachine\AccessControlExtension\Definition\AccessControlExtension;
+use Smalldb\StateMachine\AccessControlExtension\Definition\StateMachine\AccessControlExtension;
 use Smalldb\StateMachine\BpmnExtension\Definition\BpmnExtension;
 use Smalldb\StateMachine\BpmnExtension\GrafovatkoProcessor as BpmnGrafovatkoProcessor;
 use Smalldb\StateMachine\BpmnExtension\SvgPainter;
