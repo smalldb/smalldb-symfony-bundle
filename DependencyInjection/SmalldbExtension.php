@@ -22,8 +22,6 @@ use Smalldb\SmalldbBundle\ArgumentResolver\ReferenceValueResolver;
 use Smalldb\SmalldbBundle\Controller\ProfilerController;
 use Smalldb\SmalldbBundle\DataCollector\DebugLogger;
 use Smalldb\SmalldbBundle\DataCollector\SmalldbDataCollector;
-use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationListener;
-use Smalldb\SmalldbBundle\Security\SmalldbAuthenticationProvider;
 use Smalldb\SmalldbBundle\Security\SmalldbUserProvider;
 use Smalldb\SmalldbBundle\Security\SmalldbVoter;
 use Smalldb\SmalldbBundle\Security\UserRepositoryInterface;

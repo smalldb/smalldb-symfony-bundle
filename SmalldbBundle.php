@@ -18,8 +18,6 @@
 
 namespace Smalldb\SmalldbBundle;
 
-use Smalldb\SmalldbBundle\Security\SmalldbSecurityFactory;
-
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -32,10 +30,6 @@ class SmalldbBundle extends Bundle
 	public function build(ContainerBuilder $container)
 	{
 		parent::build($container);
-
-		// Register authentication listener
-		$security_extension = $container->getExtension('security');
-		$security_extension->addSecurityListenerFactory(new SmalldbSecurityFactory());
 	}
 
 }
