@@ -37,7 +37,7 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	private const DEFINITIONS_SNAPSHOT = false;
 
 	private Smalldb $smalldb;
-	private Stopwatch $stopwatch;
+	private ?Stopwatch $stopwatch;
 
 	/** @var string[] */
 	private array $machineTypes;
@@ -50,7 +50,7 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	private int $transitionsInvokedCount;
 
 
-	public function __construct(Smalldb $smalldb, Stopwatch $stopwatch)
+	public function __construct(Smalldb $smalldb, ?Stopwatch $stopwatch)
 	{
 		$this->reset();
 		$this->smalldb = $smalldb;
@@ -147,14 +147,16 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	public function logReferenceCreated(ReferenceInterface $ref)
 	{
 		$this->referencesCreatedCount++;
-		$this->stopwatch->start('reference created: ' . $ref->getMachineType(), 'smalldb')->stop();
+		if ($this->stopwatch) {
+			$this->stopwatch->start('reference created: ' . $ref->getMachineType(), 'smalldb')->stop();
+		}
 	}
 
 
 	public function logTransitionInvoked(TransitionEvent $transitionEvent): ?array
 	{
 		$this->transitionsInvokedCount++;
-		$stopwatchEvent = $this->stopwatch->start('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName());
+		$stopwatchEvent = $this->stopwatch ? $this->stopwatch->start('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName()) : null;
 		return [$stopwatchEvent];
 	}
 
@@ -162,7 +164,9 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	public function logTransitionCompleted(TransitionEvent $transitionEvent, ?array $invokeContext)
 	{
 		[$stopwatchEvent] = $invokeContext;
-		$stopwatchEvent->stop('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName());
+		if ($stopwatchEvent) {
+			$stopwatchEvent->stop('transition ' . $transitionEvent->getRef()->getMachineType() . '::' . $transitionEvent->getTransitionName());
+		}
 	}
 
 
@@ -178,4 +182,3 @@ class SmalldbDataCollector implements DataCollectorInterface, LateDataCollectorI
 	}
 
 }
-
