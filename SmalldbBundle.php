@@ -18,18 +18,38 @@
 
 namespace Smalldb\SmalldbBundle;
 
+use Smalldb\ClassLocator\ComposerClassLocator;
+use Smalldb\CodeCooker\Chef;
+use Smalldb\CodeCooker\Recipe\ClassRecipe;
+use Symfony\Component\Config\Resource\ReflectionClassResource;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+
 
 /**
  * Symfony bundle for Smalldb
  */
 class SmalldbBundle extends Bundle
 {
-	
+
 	public function build(ContainerBuilder $container)
 	{
 		parent::build($container);
+		$kernelDebug = $container->getParameter('kernel.debug');
+
+		if ($kernelDebug) {
+			$baseDir = $container->getParameter('kernel.project_dir');
+
+			$classLocator = new ComposerClassLocator($baseDir, [], [], true);
+			$chef = Chef::autoconfigure($classLocator);
+
+			// Register source classes as container resources to reload the container when they change.
+			foreach ($chef->getCookbook()->getRecipes() as $recipe) {
+				if ($recipe instanceof ClassRecipe) {
+					$container->addResource(new ReflectionClassResource($recipe->getSourceClass()));
+				}
+			}
+		}
 	}
 
 }
